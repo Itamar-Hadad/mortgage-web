@@ -35,11 +35,12 @@ export function useDraft(): UseDraftResult {
   const [draft, setDraft] = useState<QuestionnaireDraft>(readDraft)
 
   // Persist on every change (story #16 — autosave so a closed tab doesn't lose progress).
-  // Skip the very first run: state was just hydrated from storage, no need to write back.
-  const hydrated = useRef(false)
+  // Skip the very first run (state was just hydrated from storage) and the run right
+  // after a clear() (so the wiped key stays wiped instead of being re-written empty).
+  const skipNextPersist = useRef(true)
   useEffect(() => {
-    if (!hydrated.current) {
-      hydrated.current = true
+    if (skipNextPersist.current) {
+      skipNextPersist.current = false
       return
     }
     try {
@@ -59,6 +60,8 @@ export function useDraft(): UseDraftResult {
     } catch {
       // ignore
     }
+    // Don't let the autosave effect re-persist the empty draft after we just wiped it.
+    skipNextPersist.current = true
     setDraft(emptyDraft())
   }, [])
 
