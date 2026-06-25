@@ -22,5 +22,10 @@ firebase-debug.*.log
 ui-debug.log
 *.tsbuildinfo
 
+# Cloud Functions build output + synced calc-engine copy (see functions/sync-calc-engine.mjs —
+# app/src/calc-engine is the one source of truth, this is a generated copy)
+functions/lib/
+functions/src/calc-engine/
+
 # Playwright MCP verification artifacts
 .playwright-mcp/
