@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+import { signOutUser } from './auth/authService'
 import type { SectionKey, Track } from './hooks/usePersonalArea'
 
 function Icon({ name, filled = false, className = '', style }: { name: string; filled?: boolean; className?: string; style?: React.CSSProperties }) {
@@ -35,6 +37,7 @@ interface Props {
 }
 
 export function PersonalAreaLayout({ track, activeSection, isSectionUnlocked, onSelectSection, userName, children }: Props) {
+  const navigate = useNavigate()
   const visibleItems = SIDEBAR_ITEMS.filter(
     (item) => item.visibleForTracks === 'all' || item.visibleForTracks.includes(track)
   )
@@ -47,17 +50,28 @@ export function PersonalAreaLayout({ track, activeSection, isSectionUnlocked, on
         <span className="text-xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-headline)', color: 'var(--color-primary)' }}>
           SimpleSave
         </span>
-        {userName && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ background: 'var(--color-primary-container)' }}>
-              <Icon name="person" className="text-base" style={{ color: 'var(--color-primary)' }} />
+        <div className="flex items-center gap-3">
+          {userName && (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ background: 'var(--color-primary-container)' }}>
+                <Icon name="person" className="text-base" style={{ color: 'var(--color-primary)' }} />
+              </div>
+              <span className="text-sm font-semibold hidden md:block" style={{ color: 'var(--color-on-surface)' }}>
+                שלום, {userName}
+              </span>
             </div>
-            <span className="text-sm font-semibold hidden md:block" style={{ color: 'var(--color-on-surface)' }}>
-              שלום, {userName}
-            </span>
-          </div>
-        )}
+          )}
+          <button
+            onClick={async () => { await signOutUser(); navigate('/sign-in') }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold border transition-colors hover:bg-red-50"
+            style={{ borderColor: 'var(--color-outline-variant)', color: 'var(--color-error)' }}
+            title="התנתקות"
+          >
+            <Icon name="logout" className="text-base" />
+            <span className="hidden md:inline">התנתקות</span>
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-1 pt-16">

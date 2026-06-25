@@ -16,7 +16,7 @@ function Icon({ name, filled = false, className = '', style }: { name: string; f
 function getRequiredDocTypes(draft: QuestionnaireDraft): string[] {
   const types: string[] = []
   // תעודת זהות per borrower
-  draft.borrowers.forEach((b, i) => {
+  draft.borrowers.forEach((_b, i) => {
     types.push(draft.borrowers.length > 1 ? `תעודת זהות — לווה ${i + 1}` : 'תעודת זהות')
   })
   // תלוש שכר if any borrower has income

@@ -174,6 +174,12 @@ export function ResultsPage({ draft, onRestart }: Props) {
                       {t('results.cta_register')}
                     </button>
                     <button
+                      onClick={() => navigate('/sign-in')}
+                      className="rounded-full font-bold py-3 px-8 border transition-colors hover:brightness-110"
+                      style={{ borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }}>
+                      {t('sign_in.title')}
+                    </button>
+                    <button
                       onClick={() => setShowCta(false)}
                       className="rounded-full font-bold py-3 px-8 border transition-colors"
                       style={{ borderColor: 'var(--color-outline-variant)', color: 'var(--color-on-surface-variant)' }}>
