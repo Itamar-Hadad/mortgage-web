@@ -6,7 +6,12 @@ service cloud.firestore {
       allow read, write: if request.auth != null
         && request.auth.token.role == 'admin';
 
-      // Advisor (#8): only their assigned clients.
+      // Consumer can read/write their own request aggregate (issues #5, #9)
+      allow read, write: if request.auth != null
+        && request.auth.uid == requestId
+        && request.auth.token.role == 'consumer';
+
+      // Advisor can read/write requests assigned to them (issue #8)
       allow read, write: if request.auth != null
         && request.auth.token.role == 'advisor'
         && resource.data.assignedAdvisorUid == request.auth.uid;

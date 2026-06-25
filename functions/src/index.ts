@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase-admin/app'
+export { uploadDocumentCallable } from './uploadDocument'
 import { getAuth } from 'firebase-admin/auth'
 import { onCall, HttpsError, type CallableRequest } from 'firebase-functions/v2/https'
 import { calcMix } from './calc-engine/mix'
