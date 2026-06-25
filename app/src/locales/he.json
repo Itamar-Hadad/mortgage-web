@@ -8,7 +8,6 @@
     "admin_advisor": "אזור יועץ / מנהל"
   },
   "placeholder": {
-    "consumer_flow": "כאן יבוא שאלון \"משכנתא חדשה\" ומסך השעונים (Track A — issues #4, #6).",
     "personal_area": "כאן יבוא האזור האישי עם נעילה מדורגת (Track B — issues #5, #7, #9, #10).",
     "admin_advisor": "כאן יבואו מסכי יועץ ומנהל (Track C — issues #8, #11)."
   },
@@ -34,5 +33,98 @@
   },
   "footer": {
     "tagline": "SimpleSave — פלטפורמת השוואת משכנתאות"
+  },
+  "q": {
+    "title": "שאלון משכנתא חדשה",
+    "step_progress": "שלב {{current}} מתוך {{total}}",
+    "privacy_note": "אף נתון שלך לא נשמר בשום שרת. ההתקדמות נשמרת רק בדפדפן הזה.",
+    "cross_device_note": "ההתקדמות זמינה רק בדפדפן/מכשיר הזה כל עוד לא נרשמת.",
+    "next": "הבא",
+    "back": "הקודם",
+    "finish": "סיום השאלון",
+    "restart": "התחל מחדש",
+    "done_title": "סיימת את השאלון!",
+    "done_body": "התשובות שלך נשמרו. בשלב הבא נחשב עבורך הצעות תמהיל להשוואה.",
+    "steps": {
+      "property": "סוג ומקור הנכס",
+      "value_equity": "שווי והון עצמי",
+      "borrowers": "פרטי הלווים",
+      "additional_income": "הכנסות נוספות",
+      "loans": "הלוואות והוצאות קבועות",
+      "payment_range": "טווח החזר חודשי"
+    },
+    "property": {
+      "loan_purpose": "סוג הלוואה",
+      "property_source": "מקור הנכס"
+    },
+    "loan_purpose_options": {
+      "single": "נכס יחיד",
+      "additional": "נכס נוסף",
+      "any": "לכל מטרה",
+      "improvement": "שיפור דיור"
+    },
+    "property_source_options": {
+      "contractor": "קבלן",
+      "second_hand": "יד 2",
+      "subsidized": "מחיר למשתכן",
+      "self_build": "בנייה עצמית"
+    },
+    "value_equity": {
+      "property_value": "שווי הנכס",
+      "equity": "הון עצמי",
+      "required_loan": "סכום משכנתא דרוש (מחושב)",
+      "financing_ratio": "אחוז מימון",
+      "max_financing": "אחוז מימון מקסימלי במסלול זה"
+    },
+    "borrowers": {
+      "count": "מספר לווים",
+      "add": "הוסף לווה",
+      "remove": "הסר",
+      "first": "שם פרטי",
+      "last": "שם משפחה",
+      "birth": "תאריך לידה",
+      "income": "הכנסה נטו חודשית",
+      "is_owner": "בעל/ת הנכס",
+      "not_owner_hint": "לווה שאינו בעל הנכס — נספרים 50% מהכנסתו בכושר ההחזר."
+    },
+    "additional_income": {
+      "intro": "הכנסות נוספות מעבר למשכורת (לא חובה).",
+      "add": "הוסף הכנסה",
+      "type": "סוג",
+      "amount": "סכום חודשי",
+      "remove": "הסר",
+      "type_options": {
+        "pension": "קצבה",
+        "rent": "שכירות",
+        "other": "אחר"
+      }
+    },
+    "loans": {
+      "intro": "הלוואות והוצאות קבועות קיימות (לא חובה) — יופחתו מכושר ההחזר.",
+      "add": "הוסף הלוואה",
+      "remain": "יתרה שנותרה",
+      "monthly": "תשלום חודשי",
+      "end_date": "תאריך סיום",
+      "rate": "ריבית שנתית (%)",
+      "source": "מקור",
+      "remove": "הסר"
+    },
+    "payment_range": {
+      "min": "מינ׳ החזר חודשי רצוי",
+      "max": "מקס׳ החזר חודשי רצוי",
+      "suggested_max": "מקס׳ מומלץ לפי ההכנסה",
+      "suggested_hint": "מבוסס על כ-40% מההכנסה נטו המתואמת, בניכוי הלוואות קיימות."
+    },
+    "errors": {
+      "loan_purpose_required": "יש לבחור סוג הלוואה.",
+      "property_source_required": "יש לבחור מקור נכס.",
+      "property_value_required": "יש להזין שווי נכס.",
+      "equity_required": "יש להזין הון עצמי.",
+      "equity_too_low": "ההון העצמי נמוך מהנדרש לאחוז המימון המקסימלי במסלול זה.",
+      "borrower_required": "יש להזין לפחות לווה אחד.",
+      "borrower_incomplete": "יש למלא שם, תאריך לידה והכנסה לכל לווה.",
+      "max_pay_required": "יש להזין מקסימום החזר חודשי רצוי.",
+      "pay_range_inverted": "המינימום לא יכול להיות גבוה מהמקסימום."
+    }
   }
 }
