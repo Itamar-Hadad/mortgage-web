@@ -21,6 +21,7 @@ function Icon({ name, filled = false }: { name: string; filled?: boolean }) {
     <span
       className="material-symbols-outlined"
       style={{ fontVariationSettings: filled ? "'FILL' 1" : "'FILL' 0" }}
+      aria-hidden="true"
     >
       {name}
     </span>

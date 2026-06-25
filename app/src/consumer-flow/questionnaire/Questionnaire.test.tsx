@@ -37,8 +37,8 @@ describe('Questionnaire wizard', () => {
   test('advances to the next step once the step is valid', async () => {
     const user = userEvent.setup()
     renderQ()
-    await user.selectOptions(screen.getByLabelText(he.q.property.loan_purpose), 'נכס יחיד')
-    await user.selectOptions(screen.getByLabelText(he.q.property.property_source), 'יד 2')
+    await user.click(screen.getByRole('button', { name: he.q.loan_purpose_options.single }))
+    await user.click(screen.getByRole('button', { name: he.q.property_source_options.second_hand }))
     await user.click(screen.getByRole('button', { name: he.q.next }))
     expect(screen.getByText('שלב 2 מתוך 6')).toBeInTheDocument()
   })
@@ -46,7 +46,7 @@ describe('Questionnaire wizard', () => {
   test('autosaves answers to localStorage as the user fills the form', async () => {
     const user = userEvent.setup()
     renderQ()
-    await user.selectOptions(screen.getByLabelText(he.q.property.loan_purpose), 'לכל מטרה')
+    await user.click(screen.getByRole('button', { name: he.q.loan_purpose_options.any }))
 
     const stored = JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) as string)
     expect(stored.loanPurpose).toBe('לכל מטרה')
@@ -57,8 +57,8 @@ describe('Questionnaire wizard', () => {
     renderQ()
 
     // step 0: property
-    await user.selectOptions(screen.getByLabelText(he.q.property.loan_purpose), 'נכס יחיד')
-    await user.selectOptions(screen.getByLabelText(he.q.property.property_source), 'יד 2')
+    await user.click(screen.getByRole('button', { name: he.q.loan_purpose_options.single }))
+    await user.click(screen.getByRole('button', { name: he.q.property_source_options.second_hand }))
     await user.click(screen.getByRole('button', { name: he.q.next }))
 
     // step 1: value & equity (700k loan on 1M = 70% ≤ 75%)
@@ -79,7 +79,7 @@ describe('Questionnaire wizard', () => {
     await user.click(screen.getByRole('button', { name: he.q.next }))
 
     // step 5: payment range
-    await user.type(screen.getByLabelText(he.q.payment_range.max), '6000')
+    await user.type(screen.getByLabelText(`${he.q.payment_range.max} (₪)`), '6000')
     await user.click(screen.getByRole('button', { name: he.q.finish }))
 
     expect(screen.getByRole('heading', { name: he.q.done_title })).toBeInTheDocument()

@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { financingRatio, maxFinancingPct, requiredLoan } from '../validation'
 import type { StepProps } from './StepProps'
@@ -18,11 +19,13 @@ function NumericField({
   onChange: (v: number | '') => void
   placeholder?: string
 }) {
+  const id = useId()
   return (
     <div>
-      <label className="ss-label">{label}</label>
+      <label className="ss-label" htmlFor={id}>{label}</label>
       <div className="relative">
         <input
+          id={id}
           type="number"
           inputMode="numeric"
           className="ss-input ps-4 pe-12"
