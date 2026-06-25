@@ -12,6 +12,7 @@
     "test:firestore": "npx --yes firebase-tools emulators:exec --only firestore \"vitest run --config vitest.emulator.config.ts\""
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
     "firebase": "^12.15.0",
     "i18next": "^26.3.2",
     "react": "^19.2.7",
