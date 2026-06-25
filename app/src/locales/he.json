@@ -2,6 +2,8 @@
   "app_title": "SimpleSave",
   "nav": {
     "consumer_flow": "שאלון משכנתא חדשה",
+    "sign_up": "הרשמה",
+    "sign_in": "כניסה",
     "personal_area": "האזור האישי",
     "advisor": "אזור יועץ",
     "admin": "אזור מנהל"
@@ -10,8 +12,32 @@
     "personal_area": "כאן יבוא האזור האישי עם נעילה מדורגת (Track B — issues #5, #7, #9, #10).",
     "admin": "כאן יבוא מסך המנהל (Track C — issue #11)."
   },
+  "sign_up": {
+    "title": "הרשמה",
+    "method_phone": "טלפון (קוד אימות)",
+    "method_email": "מייל וסיסמה",
+    "phone_label": "מספר טלפון",
+    "send_code": "שלח קוד אימות",
+    "code_label": "קוד אימות",
+    "confirm_code": "אישור קוד",
+    "email_label": "מייל",
+    "password_label": "סיסמה",
+    "submit_email": "הרשמה",
+    "error_generic": "ההרשמה נכשלה. נסו שוב."
+  },
+  "sign_in": {
+    "title": "כניסה",
+    "email_label": "מייל",
+    "password_label": "סיסמה",
+    "submit": "כניסה",
+    "error_generic": "הכניסה נכשלה. נסו שוב."
+  },
   "footer": {
-    "tagline": "SimpleSave — פלטפורמת השוואת משכנתאות"
+    "tagline": "SimpleSave — פלטפורמת השוואת משכנתאות",
+    "copyright": "© 2024 SimpleSave Financial. כל הזכויות שמורות.",
+    "privacy_policy": "מדיניות פרטיות",
+    "terms_of_service": "תנאי שימוש",
+    "contact": "צור קשר"
   },
   "advisor": {
     "title": "אזור יועץ",
