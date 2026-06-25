@@ -3,10 +3,15 @@ import type { AdditionalIncome, AdditionalIncomeType } from '../types'
 import type { StepProps } from './StepProps'
 import { toNum } from './StepProps'
 
-const TYPES: AdditionalIncomeType[] = ['קצבה', 'שכירות', 'אחר']
+const TYPES: { value: AdditionalIncomeType; labelKey: string }[] = [
+  { value: 'קצבה',   labelKey: 'q.additional_income.type_options.pension' },
+  { value: 'שכירות', labelKey: 'q.additional_income.type_options.rent' },
+  { value: 'אחר',    labelKey: 'q.additional_income.type_options.other' },
+]
 
 export function AdditionalIncomeStep({ draft, update }: StepProps) {
   const { t } = useTranslation()
+
 
   function patchRow(index: number, patch: Partial<AdditionalIncome>) {
     update({ additionalIncome: draft.additionalIncome.map((r, i) => (i === index ? { ...r, ...patch } : r)) })
@@ -38,7 +43,7 @@ export function AdditionalIncomeStep({ draft, update }: StepProps) {
               value={r.type}
               onChange={(e) => patchRow(i, { type: e.target.value as AdditionalIncomeType })}
             >
-              {TYPES.map((ty) => <option key={ty} value={ty}>{ty}</option>)}
+              {TYPES.map(({ value, labelKey }) => <option key={value} value={value}>{t(labelKey)}</option>)}
             </select>
           </div>
           <div className="flex-1">
