@@ -9,8 +9,44 @@
     "admin": "אזור מנהל"
   },
   "placeholder": {
-    "personal_area": "כאן יבוא האזור האישי עם נעילה מדורגת (Track B — issues #5, #7, #9, #10).",
-    "admin": "כאן יבוא מסך המנהל (Track C — issue #11)."
+    "personal_area": "כאן יבוא האזור האישי עם נעילה מדורגת (Track B — issues #5, #7, #9, #10)."
+  },
+  "admin": {
+    "title": "אזור מנהל",
+    "views": {
+      "dashboard": "דשבורד",
+      "clients": "לקוחות",
+      "config": "הגדרות מערכת"
+    },
+    "dashboard": {
+      "title": "סיכום בקשות פתוחות",
+      "by_type": "לפי סוג הלוואה",
+      "total": "סה\"כ בקשות פתוחות"
+    },
+    "clients": {
+      "title": "כל הלקוחות",
+      "empty": "אין בקשות פתוחות",
+      "unassigned": "לא משויך",
+      "assign_advisor": "שיוך יועץ",
+      "filter_advisor": "סינון לפי יועץ",
+      "all_advisors": "כל היועצים",
+      "approval_status": "סטטוס אישור",
+      "created_at": "תאריך יצירה"
+    },
+    "config": {
+      "title": "הגדרות מערכת",
+      "tabs": {
+        "generalRates": "ריביות שוק",
+        "riskRules": "כללי סיכון",
+        "clockTemplates": "תבניות תמהיל",
+        "monthlyIndices": "מדדים חודשיים"
+      },
+      "save": "שמור",
+      "save_success": "ההגדרות נשמרו בהצלחה",
+      "save_error": "שגיאה בשמירה — נסו שוב",
+      "loading": "טוען...",
+      "edit_json": "עריכת JSON"
+    }
   },
   "sign_up": {
     "title": "הרשמה",

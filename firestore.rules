@@ -1,12 +1,22 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Owner (#5) and admin (#11) access aren't built yet — each issue adds its
-    // own allow clause here when it lands (see ARCHITECTURE.md §13).
     match /requests/{requestId} {
+      // Admin (#11): full access to every request regardless of assignment.
+      allow read, write: if request.auth != null
+        && request.auth.token.role == 'admin';
+
+      // Advisor (#8): only their assigned clients.
       allow read, write: if request.auth != null
         && request.auth.token.role == 'advisor'
         && resource.data.assignedAdvisorUid == request.auth.uid;
+    }
+
+    // Managed config (generalRates, riskRules, clockTemplates, monthlyIndices).
+    // Written and read by admin (#11); read by the calc-engine Cloud Function.
+    match /config/{configKey} {
+      allow read, write: if request.auth != null
+        && request.auth.token.role == 'admin';
     }
 
     // advisors' personal follow-up tasks — requestUid is an optional link
