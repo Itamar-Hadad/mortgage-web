@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 export function Icon({
   name,
   filled = false,
@@ -37,6 +39,9 @@ export function AppHeader() {
 }
 
 export function AppFooter() {
+  const { t } = useTranslation()
+  const links = [t('footer.privacy_policy'), t('footer.terms_of_service'), t('footer.contact')]
+
   return (
     <footer
       className="relative w-full py-10 px-4 md:px-10 flex flex-col md:flex-row justify-between items-center gap-6"
@@ -46,10 +51,10 @@ export function AppFooter() {
         <span className="text-xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-headline)', color: 'var(--color-secondary)' }}>
           SimpleSave
         </span>
-        <p className="text-xs" style={{ color: 'var(--color-on-surface-variant)' }}>© 2024 SimpleSave Financial. All rights reserved.</p>
+        <p className="text-xs" style={{ color: 'var(--color-on-surface-variant)' }}>{t('footer.copyright')}</p>
       </div>
       <div className="flex gap-6">
-        {['מדיניות פרטיות', 'תנאי שימוש', 'צור קשר'].map((label) => (
+        {links.map((label) => (
           <a key={label} href="#" className="text-sm transition-colors hover:text-primary" style={{ color: 'var(--color-on-surface-variant)' }}>
             {label}
           </a>

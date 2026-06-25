@@ -1,5 +1,5 @@
 import { test, expect, vi, beforeEach } from 'vitest'
-import type { UserRecord } from 'firebase-functions/v1/auth'
+import type { CallableRequest } from 'firebase-functions/v2/https'
 
 const setCustomUserClaimsMock = vi.fn()
 
@@ -8,14 +8,20 @@ vi.mock('firebase-admin/auth', () => ({
   getAuth: () => ({ setCustomUserClaims: setCustomUserClaimsMock }),
 }))
 
-const { handleUserCreate } = await import('./index')
+const { claimConsumerRole } = await import('./index')
 
 beforeEach(() => {
   setCustomUserClaimsMock.mockReset()
 })
 
-test('a newly created Auth user is given the consumer role claim', async () => {
-  await handleUserCreate({ uid: 'uid-1' } as UserRecord)
+test('an authenticated caller is given the consumer role claim', async () => {
+  await claimConsumerRole({ auth: { uid: 'uid-1' } } as CallableRequest)
 
   expect(setCustomUserClaimsMock).toHaveBeenCalledWith('uid-1', { role: 'consumer' })
+})
+
+test('an unauthenticated call is rejected and never grants a claim', async () => {
+  await expect(claimConsumerRole({ auth: undefined } as CallableRequest)).rejects.toThrow()
+
+  expect(setCustomUserClaimsMock).not.toHaveBeenCalled()
 })

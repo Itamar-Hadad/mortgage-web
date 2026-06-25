@@ -5,10 +5,10 @@ import {
   signInWithEmailAndPassword,
   getAdditionalUserInfo,
   type ConfirmationResult,
-  type User,
   type UserCredential,
 } from 'firebase/auth'
-import { auth } from '../../shared/firebase'
+import { httpsCallable } from 'firebase/functions'
+import { auth, functions } from '../../shared/firebase'
 
 // ARCHITECTURE.md §11: phone OTP (Firebase Phone Auth) is primary, email+password
 // is the alternative. Both produce a real Firebase Auth uid — never Anonymous Auth
@@ -48,19 +48,14 @@ export function isNewUser(credential: UserCredential): boolean {
   return getAdditionalUserInfo(credential)?.isNewUser ?? false
 }
 
-const ROLE_CLAIM_POLL_ATTEMPTS = 5
-const ROLE_CLAIM_POLL_DELAY_MS = 500
+// Calls `claimConsumerRoleOnRegistration` (functions/src/index.ts). Deliberately
+// invoked by SignUpPage only *after* migrateDraftOnSignup's Firestore write
+// succeeds — granting the `role: 'consumer'` claim any earlier (e.g. from an
+// auth.user().onCreate trigger) would leave a permanently-privileged Auth user
+// behind if the tab closes before migration completes. See issue #5 AC "משתמש
+// שנכשל/ביטל הרשמה לא משאיר רישום חלקי".
+const claimConsumerRoleCallable = httpsCallable(functions, 'claimConsumerRoleOnRegistration')
 
-// `assignConsumerRoleOnSignup` (functions/src/index.ts) sets the `role` custom
-// claim asynchronously after the Auth user is created, so it isn't on the token
-// we get back from signup. Poll a few times with a forced refresh so the rest of
-// the app (and Firestore rules, once issue #7 lands) sees the claim quickly.
-export async function waitForRoleClaim(user: User): Promise<string | undefined> {
-  for (let attempt = 0; attempt < ROLE_CLAIM_POLL_ATTEMPTS; attempt++) {
-    const tokenResult = await user.getIdTokenResult(true)
-    const role = tokenResult.claims.role
-    if (typeof role === 'string') return role
-    await new Promise((resolve) => setTimeout(resolve, ROLE_CLAIM_POLL_DELAY_MS))
-  }
-  return undefined
+export async function claimConsumerRole(): Promise<void> {
+  await claimConsumerRoleCallable()
 }

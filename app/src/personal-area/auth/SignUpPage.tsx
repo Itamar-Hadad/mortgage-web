@@ -8,7 +8,7 @@ import {
   confirmPhoneOtp,
   signUpWithEmail,
   isNewUser,
-  waitForRoleClaim,
+  claimConsumerRole,
 } from './authService'
 import { migrateDraftOnSignup } from './migrateDraftOnSignup'
 import { AuthPageShell, Icon } from '../../shared/AppLayout'
@@ -35,8 +35,14 @@ export function SignUpPage() {
 
   async function completeSignup(credential: UserCredential) {
     const newUser = isNewUser(credential)
-    if (newUser) await waitForRoleClaim(credential.user)
     await migrateDraftOnSignup(credential.user.uid, newUser)
+    // Only grant the consumer role once the draft is safely in requests/{uid} —
+    // a cancelled/interrupted signup must never leave a permanently-privileged
+    // Auth user with no backing record (issue #5 AC).
+    if (newUser) {
+      await claimConsumerRole()
+      await credential.user.getIdToken(true)
+    }
     navigate('/personal-area')
   }
 

@@ -7,9 +7,10 @@ import i18n from '../../shared/i18n'
 
 const signUpWithEmailMock = vi.fn()
 const isNewUserMock = vi.fn()
-const waitForRoleClaimMock = vi.fn()
+const claimConsumerRoleMock = vi.fn()
 const migrateDraftOnSignupMock = vi.fn()
 const navigateMock = vi.fn()
+const getIdTokenMock = vi.fn()
 
 vi.mock('./authService', () => ({
   createRecaptchaVerifier: vi.fn(),
@@ -17,7 +18,7 @@ vi.mock('./authService', () => ({
   confirmPhoneOtp: vi.fn(),
   signUpWithEmail: (...args: unknown[]) => signUpWithEmailMock(...args),
   isNewUser: (...args: unknown[]) => isNewUserMock(...args),
-  waitForRoleClaim: (...args: unknown[]) => waitForRoleClaimMock(...args),
+  claimConsumerRole: (...args: unknown[]) => claimConsumerRoleMock(...args),
 }))
 
 vi.mock('./migrateDraftOnSignup', () => ({
@@ -34,9 +35,10 @@ const { SignUpPage } = await import('./SignUpPage')
 beforeEach(() => {
   signUpWithEmailMock.mockReset()
   isNewUserMock.mockReset()
-  waitForRoleClaimMock.mockReset().mockResolvedValue('consumer')
+  claimConsumerRoleMock.mockReset().mockResolvedValue(undefined)
   migrateDraftOnSignupMock.mockReset().mockResolvedValue(undefined)
   navigateMock.mockReset()
+  getIdTokenMock.mockReset().mockResolvedValue('token')
 })
 
 function renderSignUp() {
@@ -49,8 +51,8 @@ function renderSignUp() {
   )
 }
 
-test('new email signup waits for the role claim, migrates the draft, and navigates', async () => {
-  const credential = { user: { uid: 'uid-new' } }
+test('new email signup migrates the draft, then claims the consumer role, then navigates', async () => {
+  const credential = { user: { uid: 'uid-new', getIdToken: getIdTokenMock } }
   signUpWithEmailMock.mockResolvedValue(credential)
   isNewUserMock.mockReturnValue(true)
 
@@ -61,13 +63,19 @@ test('new email signup waits for the role claim, migrates the draft, and navigat
   await userEvent.click(screen.getByRole('button', { name: i18n.t('sign_up.submit_email') }))
 
   expect(signUpWithEmailMock).toHaveBeenCalledWith('dana@example.com', 'super-secret')
-  expect(waitForRoleClaimMock).toHaveBeenCalledWith(credential.user)
   expect(migrateDraftOnSignupMock).toHaveBeenCalledWith('uid-new', true)
+  expect(claimConsumerRoleMock).toHaveBeenCalledTimes(1)
+  expect(getIdTokenMock).toHaveBeenCalledWith(true)
   expect(navigateMock).toHaveBeenCalledWith('/personal-area')
+
+  // order matters: the role is only claimed once the draft has actually migrated
+  const migrateOrder = migrateDraftOnSignupMock.mock.invocationCallOrder[0]
+  const claimOrder = claimConsumerRoleMock.mock.invocationCallOrder[0]
+  expect(migrateOrder).toBeLessThan(claimOrder)
 })
 
-test('returning email user skips the role-claim wait but still navigates', async () => {
-  const credential = { user: { uid: 'uid-returning' } }
+test('returning email user skips the role claim but still navigates', async () => {
+  const credential = { user: { uid: 'uid-returning', getIdToken: getIdTokenMock } }
   signUpWithEmailMock.mockResolvedValue(credential)
   isNewUserMock.mockReturnValue(false)
 
@@ -77,12 +85,12 @@ test('returning email user skips the role-claim wait but still navigates', async
   await userEvent.type(screen.getByLabelText(i18n.t('sign_up.password_label')), 'super-secret')
   await userEvent.click(screen.getByRole('button', { name: i18n.t('sign_up.submit_email') }))
 
-  expect(waitForRoleClaimMock).not.toHaveBeenCalled()
+  expect(claimConsumerRoleMock).not.toHaveBeenCalled()
   expect(migrateDraftOnSignupMock).toHaveBeenCalledWith('uid-returning', false)
   expect(navigateMock).toHaveBeenCalledWith('/personal-area')
 })
 
-test('a failed email signup shows the generic error and never migrates the draft', async () => {
+test('a failed email signup shows the generic error and never migrates the draft or claims a role', async () => {
   signUpWithEmailMock.mockRejectedValue(new Error('auth/email-already-in-use'))
 
   renderSignUp()
@@ -93,5 +101,23 @@ test('a failed email signup shows the generic error and never migrates the draft
 
   expect(await screen.findByRole('alert')).toHaveTextContent(i18n.t('sign_up.error_generic'))
   expect(migrateDraftOnSignupMock).not.toHaveBeenCalled()
+  expect(claimConsumerRoleMock).not.toHaveBeenCalled()
+  expect(navigateMock).not.toHaveBeenCalled()
+})
+
+test('a new user whose draft migration fails is never given the consumer role (no orphaned privileged account)', async () => {
+  const credential = { user: { uid: 'uid-interrupted', getIdToken: getIdTokenMock } }
+  signUpWithEmailMock.mockResolvedValue(credential)
+  isNewUserMock.mockReturnValue(true)
+  migrateDraftOnSignupMock.mockRejectedValue(new Error('network error'))
+
+  renderSignUp()
+  await userEvent.click(screen.getByRole('button', { name: i18n.t('sign_up.method_email') }))
+  await userEvent.type(screen.getByLabelText(i18n.t('sign_up.email_label')), 'dana@example.com')
+  await userEvent.type(screen.getByLabelText(i18n.t('sign_up.password_label')), 'super-secret')
+  await userEvent.click(screen.getByRole('button', { name: i18n.t('sign_up.submit_email') }))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(i18n.t('sign_up.error_generic'))
+  expect(claimConsumerRoleMock).not.toHaveBeenCalled()
   expect(navigateMock).not.toHaveBeenCalled()
 })

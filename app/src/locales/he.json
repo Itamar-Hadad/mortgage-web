@@ -32,7 +32,11 @@
     "error_generic": "הכניסה נכשלה. נסו שוב."
   },
   "footer": {
-    "tagline": "SimpleSave — פלטפורמת השוואת משכנתאות"
+    "tagline": "SimpleSave — פלטפורמת השוואת משכנתאות",
+    "copyright": "© 2024 SimpleSave Financial. כל הזכויות שמורות.",
+    "privacy_policy": "מדיניות פרטיות",
+    "terms_of_service": "תנאי שימוש",
+    "contact": "צור קשר"
   },
   "q": {
     "title": "שאלון משכנתא חדשה",
