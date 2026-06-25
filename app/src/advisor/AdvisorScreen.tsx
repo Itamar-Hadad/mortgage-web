@@ -7,7 +7,7 @@ import { DocumentsTab } from './DocumentsTab'
 import { TasksTab } from './TasksTab'
 import { MessagesPlaceholder } from './MessagesPlaceholder'
 import { CURRENT_ADVISOR_UID, seedRequests } from './seedRequests'
-import { PageShell } from '../shared/PageChrome'
+import { PageShell } from '../shared/AppLayout'
 import type { AdvisorTask, MortgageRequest } from './types'
 
 type View = 'clients' | 'tasks'

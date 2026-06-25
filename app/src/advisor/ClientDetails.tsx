@@ -115,8 +115,8 @@ export function ClientDetails({ client, onUpdateClient }: ClientDetailsProps) {
             <label className="ss-label">{t('q.property.loan_purpose')}</label>
             <select
               className="ss-input"
-              value={client.financial.loanPurpose}
-              onChange={(e) => patchFinancial({ loanPurpose: e.target.value as LoanPurpose })}
+              value={client.loanPurpose}
+              onChange={(e) => onUpdateClient({ loanPurpose: e.target.value as LoanPurpose })}
             >
               <option value="" />
               {LOAN_PURPOSES.map(({ value, labelKey }) => (
@@ -130,8 +130,8 @@ export function ClientDetails({ client, onUpdateClient }: ClientDetailsProps) {
             <label className="ss-label">{t('q.property.property_source')}</label>
             <select
               className="ss-input"
-              value={client.financial.propertySource}
-              onChange={(e) => patchFinancial({ propertySource: e.target.value as PropertySource })}
+              value={client.propertySource}
+              onChange={(e) => onUpdateClient({ propertySource: e.target.value as PropertySource })}
             >
               <option value="" />
               {PROPERTY_SOURCES.map(({ value, labelKey }) => (

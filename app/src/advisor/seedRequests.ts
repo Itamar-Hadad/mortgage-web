@@ -1,8 +1,10 @@
-// Mock/seed requests for the advisor screen (issue #8) — #5 (registration)
-// hasn't landed yet, so there's no real signed-in advisor or live Firestore
-// data to read. Swapping this for a Firestore query (and CURRENT_ADVISOR_UID
-// for the authenticated user's uid) is the integration point once #5 exists —
-// see ARCHITECTURE.md §13.
+// Mock/seed requests for the advisor screen (issue #8). #5 (registration)
+// has landed (writes real requests/{uid} via migrateDraftOnSignup.ts), but
+// there's still no real signed-in *advisor* (only consumer role claims
+// exist) and no admin (#11) to set assignedAdvisorUid — so this stays
+// local-state seed data until that exists. Swapping this for a Firestore
+// query (and CURRENT_ADVISOR_UID for the authenticated advisor's uid) is
+// the integration point — see ARCHITECTURE.md §13.
 import type { MortgageRequest } from './types'
 
 export const CURRENT_ADVISOR_UID = 'advisor-demo'
@@ -16,9 +18,9 @@ export function seedRequests(): MortgageRequest[] {
       personal: [
         { first: 'דנה', last: 'כהן', idNumber: '123456782', birth: '1990-04-12', income: 14000, isPropertyOwner: true },
       ],
+      loanPurpose: 'נכס יחיד',
+      propertySource: 'יד 2',
       financial: {
-        loanPurpose: 'נכס יחיד',
-        propertySource: 'יד 2',
         propertyValue: 1800000,
         equity: 450000,
         minPay: 5000,
@@ -66,9 +68,9 @@ export function seedRequests(): MortgageRequest[] {
       personal: [
         { first: 'יוני', last: 'לוי', idNumber: '987654321', birth: '1985-09-02', income: 22000, isPropertyOwner: true },
       ],
+      loanPurpose: 'נכס נוסף',
+      propertySource: 'קבלן',
       financial: {
-        loanPurpose: 'נכס נוסף',
-        propertySource: 'קבלן',
         propertyValue: 2200000,
         equity: 900000,
         minPay: 7000,
@@ -98,9 +100,9 @@ export function seedRequests(): MortgageRequest[] {
       personal: [
         { first: 'אביגיל', last: 'מזרחי', idNumber: '111223344', birth: '1992-01-20', income: 17000, isPropertyOwner: true },
       ],
+      loanPurpose: 'נכס יחיד',
+      propertySource: 'מחיר למשתכן',
       financial: {
-        loanPurpose: 'נכס יחיד',
-        propertySource: 'מחיר למשתכן',
         propertyValue: 1500000,
         equity: 300000,
         minPay: 4000,

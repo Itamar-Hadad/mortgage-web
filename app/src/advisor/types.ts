@@ -1,7 +1,10 @@
 // requests/{uid} document shape, advisor-screen slice (issue #8).
-// personal/financial/loans/mixes mirror QuestionnaireDraft (see
-// consumer-flow/questionnaire/types.ts) per CONTEXT.md's "בקשה" definition —
-// 1:1 with the pre-registration draft once #5 migrates it into Firestore.
+// Mirrors the real shape issue #5's migrateDraftOnSignup.ts (toRequest())
+// writes — see docs/contracts/questionnaire-draft.md: loanPurpose/
+// propertySource are top-level fields, NOT nested under `financial`
+// (financial is only propertyValue/equity/minPay/maxPayDesired, per
+// ARCHITECTURE.md §2/§9). Keep this in sync with that contract, not with
+// QuestionnaireDraft's own (flatter) shape.
 import type {
   AdditionalIncome,
   Borrower,
@@ -37,9 +40,9 @@ export interface MortgageRequest {
   assignedAdvisorUid: string | null
   createdAt: string
   personal: Borrower[]
+  loanPurpose: LoanPurpose | ''
+  propertySource: PropertySource | ''
   financial: {
-    loanPurpose: LoanPurpose | ''
-    propertySource: PropertySource | ''
     propertyValue: number | ''
     equity: number | ''
     minPay: number | ''
@@ -48,6 +51,8 @@ export interface MortgageRequest {
   additionalIncome: AdditionalIncome[]
   loans: ExistingLoan[]
   mixes: ProposedMix[]
+  /** step the consumer reached in the questionnaire — written by #5, not read by #8 today. */
+  questionnaireStep?: number
   documents: RequestDocument[]
   approvalStatus: ApprovalStatus
   /** advisor archived this client out of their active list — see clientList.ts. */

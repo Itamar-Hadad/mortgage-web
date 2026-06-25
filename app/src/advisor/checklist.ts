@@ -12,8 +12,8 @@ export function checklistStatus(request: MortgageRequest): ChecklistStatus {
     request.personal.length > 0 &&
     request.personal.every((b) => b.first !== '' && b.last !== '' && b.birth !== '' && b.income !== '')
 
-  const { loanPurpose, propertyValue, equity } = request.financial
-  const mortgage = loanPurpose !== '' && propertyValue !== '' && equity !== ''
+  const { propertyValue, equity } = request.financial
+  const mortgage = request.loanPurpose !== '' && propertyValue !== '' && equity !== ''
 
   const documents = request.documents.length > 0 && request.documents.every((doc) => doc.status === 'אושר')
 

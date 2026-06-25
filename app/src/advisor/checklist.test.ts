@@ -8,7 +8,9 @@ function request(overrides: Partial<MortgageRequest> = {}): MortgageRequest {
     assignedAdvisorUid: 'advisor1',
     createdAt: '2026-01-01T00:00:00.000Z',
     personal: [],
-    financial: { loanPurpose: '', propertySource: '', propertyValue: '', equity: '', minPay: '', maxPayDesired: '' },
+    loanPurpose: '',
+    propertySource: '',
+    financial: { propertyValue: '', equity: '', minPay: '', maxPayDesired: '' },
     additionalIncome: [],
     loans: [],
     mixes: [],
@@ -43,10 +45,14 @@ describe('checklistStatus', () => {
 
   it('marks mortgage complete once loan purpose, property value and equity are all filled', () => {
     const incomplete = request({
-      financial: { loanPurpose: 'נכס יחיד', propertySource: 'קבלן', propertyValue: '', equity: 200000, minPay: '', maxPayDesired: '' },
+      loanPurpose: 'נכס יחיד',
+      propertySource: 'קבלן',
+      financial: { propertyValue: '', equity: 200000, minPay: '', maxPayDesired: '' },
     })
     const complete = request({
-      financial: { loanPurpose: 'נכס יחיד', propertySource: 'קבלן', propertyValue: 1500000, equity: 200000, minPay: 3000, maxPayDesired: 6000 },
+      loanPurpose: 'נכס יחיד',
+      propertySource: 'קבלן',
+      financial: { propertyValue: 1500000, equity: 200000, minPay: 3000, maxPayDesired: 6000 },
     })
 
     expect(checklistStatus(incomplete).mortgage).toBe(false)

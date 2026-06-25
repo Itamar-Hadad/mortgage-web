@@ -9,7 +9,7 @@ import { AdditionalIncomeStep } from './steps/AdditionalIncomeStep'
 import { LoansStep } from './steps/LoansStep'
 import { PaymentRangeStep } from './steps/PaymentRangeStep'
 import type { StepProps } from './steps/StepProps'
-import { AppFooter, AppHeader, Icon, PageBackground } from '../../shared/PageChrome'
+import { AppFooter, AppHeader, BackgroundBlobs, Icon } from '../../shared/AppLayout'
 
 const STEPS: Array<(props: StepProps) => React.ReactElement> = [
   PropertyStep,
@@ -49,7 +49,7 @@ export function Questionnaire() {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-background)' }}>
         <AppHeader />
-        <PageBackground />
+        <BackgroundBlobs />
         <main className="relative flex-1 flex flex-col items-center justify-center px-4 pt-28 pb-12" style={{ zIndex: 10 }}>
           <div className="glass-panel w-full max-w-lg rounded-xl p-10 text-center">
             <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
@@ -78,7 +78,7 @@ export function Questionnaire() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-background)' }}>
       <AppHeader />
-      <PageBackground />
+      <BackgroundBlobs />
 
       <main className="relative flex-1 flex flex-col items-center justify-center px-4 pt-28 pb-12" style={{ zIndex: 10 }}>
         {/* Step header */}
