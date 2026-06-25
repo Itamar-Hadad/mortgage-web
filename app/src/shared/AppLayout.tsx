@@ -85,3 +85,15 @@ export function AuthPageShell({ children }: { children: React.ReactNode }) {
     </div>
   )
 }
+
+/** Full-width page shell (no centered card) — for screens like the questionnaire or advisor dashboard. */
+export function PageShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-background)' }}>
+      <AppHeader />
+      <BackgroundBlobs />
+      <main className="relative flex-1 px-4 pt-28 pb-12" style={{ zIndex: 10 }}>{children}</main>
+      <AppFooter />
+    </div>
+  )
+}

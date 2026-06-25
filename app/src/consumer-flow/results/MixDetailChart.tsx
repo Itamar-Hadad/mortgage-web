@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Chart,
   BarElement,
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export function MixDetailChart({ calc, mixId }: Props) {
+  const { t } = useTranslation()
   const monthlyRef = useRef<HTMLCanvasElement>(null)
   const cumulativeRef = useRef<HTMLCanvasElement>(null)
 
@@ -39,7 +41,6 @@ export function MixDetailChart({ calc, mixId }: Props) {
     if (!monthlyRef.current || !cumulativeRef.current) return
 
     const maxN = calc.maxN
-    // Sample every month up to maxN, aggregate across all routes
     const labels: string[] = []
     const prinArr: number[] = []
     const intrArr: number[] = []
@@ -52,7 +53,7 @@ export function MixDetailChart({ calc, mixId }: Props) {
     for (let i = 0; i < maxN; i++) {
       const month = i + 1
       if (month % 12 === 1 || maxN <= 60) {
-        labels.push(`חודש ${month}`)
+        labels.push(t('results.chart_month', { n: month }))
         let p = 0, intr = 0
         for (const r of calc.per) {
           p += r.prin[i] ?? 0
@@ -78,13 +79,13 @@ export function MixDetailChart({ calc, mixId }: Props) {
       data: {
         labels,
         datasets: [
-          { label: 'קרן', data: prinArr, backgroundColor: 'rgba(0,104,117,0.7)', stack: 'a' },
-          { label: 'ריבית', data: intrArr, backgroundColor: 'rgba(90,215,235,0.7)', stack: 'a' },
+          { label: t('results.chart_principal'), data: prinArr, backgroundColor: 'rgba(0,104,117,0.7)', stack: 'a' },
+          { label: t('results.chart_interest'), data: intrArr, backgroundColor: 'rgba(90,215,235,0.7)', stack: 'a' },
         ],
       },
       options: {
         responsive: true,
-        plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ₪${fmt(ctx.parsed.y)}` } } },
+        plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ₪${fmt(Number(ctx.parsed.y))}` } } },
         scales: { x: { stacked: true }, y: { stacked: true } },
       },
     })
@@ -94,13 +95,13 @@ export function MixDetailChart({ calc, mixId }: Props) {
       data: {
         labels,
         datasets: [
-          { label: 'קרן מצטברת', data: cumPrin, borderColor: '#006875', backgroundColor: 'rgba(0,104,117,0.1)', fill: true, tension: 0.3 },
-          { label: 'ריבית מצטברת', data: cumIntr, borderColor: '#5ad7eb', backgroundColor: 'rgba(90,215,235,0.1)', fill: true, tension: 0.3 },
+          { label: t('results.chart_principal_cumulative'), data: cumPrin, borderColor: '#006875', backgroundColor: 'rgba(0,104,117,0.1)', fill: true, tension: 0.3 },
+          { label: t('results.chart_interest_cumulative'), data: cumIntr, borderColor: '#5ad7eb', backgroundColor: 'rgba(90,215,235,0.1)', fill: true, tension: 0.3 },
         ],
       },
       options: {
         responsive: true,
-        plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ₪${fmt(ctx.parsed.y)}` } } },
+        plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ₪${fmt(Number(ctx.parsed.y))}` } } },
       },
     })
 
@@ -108,16 +109,16 @@ export function MixDetailChart({ calc, mixId }: Props) {
       if (window._charts[monthlyId]) { window._charts[monthlyId].destroy(); delete window._charts[monthlyId] }
       if (window._charts[cumulativeId]) { window._charts[cumulativeId].destroy(); delete window._charts[cumulativeId] }
     }
-  }, [calc, mixId])
+  }, [calc, mixId, t])
 
   return (
     <div className="mt-4 flex flex-col gap-6">
       <div>
-        <p className="text-sm font-bold mb-2" style={{ color: 'var(--color-on-surface-variant)' }}>תשלומים חודשיים (קרן + ריבית)</p>
+        <p className="text-sm font-bold mb-2" style={{ color: 'var(--color-on-surface-variant)' }}>{t('results.chart_monthly_title')}</p>
         <canvas ref={monthlyRef} />
       </div>
       <div>
-        <p className="text-sm font-bold mb-2" style={{ color: 'var(--color-on-surface-variant)' }}>תשלומים מצטברים</p>
+        <p className="text-sm font-bold mb-2" style={{ color: 'var(--color-on-surface-variant)' }}>{t('results.chart_cumulative_title')}</p>
         <canvas ref={cumulativeRef} />
       </div>
     </div>

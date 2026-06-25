@@ -3,7 +3,8 @@ import { I18nextProvider } from 'react-i18next'
 import i18n from './shared/i18n'
 import { Questionnaire } from './consumer-flow/questionnaire/Questionnaire'
 import { PersonalArea } from './personal-area/PersonalArea'
-import { AdminAdvisorPlaceholder } from './admin-advisor/AdminAdvisorPlaceholder'
+import { AdminPlaceholder } from './admin/AdminPlaceholder'
+import { AdvisorScreen } from './advisor/AdvisorScreen'
 import { SignUpPage } from './personal-area/auth/SignUpPage'
 import { SignInPage } from './personal-area/auth/SignInPage'
 
@@ -14,7 +15,8 @@ export function AppRoutes() {
       <Route path="/sign-up" element={<SignUpPage />} />
       <Route path="/sign-in" element={<SignInPage />} />
       <Route path="/personal-area" element={<PersonalArea />} />
-      <Route path="/admin-advisor" element={<AdminAdvisorPlaceholder />} />
+      <Route path="/advisor" element={<AdvisorScreen />} />
+      <Route path="/admin" element={<AdminPlaceholder />} />
     </Routes>
   )
 }

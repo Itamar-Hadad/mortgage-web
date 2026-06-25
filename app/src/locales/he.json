@@ -5,11 +5,12 @@
     "sign_up": "הרשמה",
     "sign_in": "כניסה",
     "personal_area": "האזור האישי",
-    "admin_advisor": "אזור יועץ / מנהל"
+    "advisor": "אזור יועץ",
+    "admin": "אזור מנהל"
   },
   "placeholder": {
     "personal_area": "כאן יבוא האזור האישי עם נעילה מדורגת (Track B — issues #5, #7, #9, #10).",
-    "admin_advisor": "כאן יבואו מסכי יועץ ומנהל (Track C — issues #8, #11)."
+    "admin": "כאן יבוא מסך המנהל (Track C — issue #11)."
   },
   "sign_up": {
     "title": "הרשמה",
@@ -37,6 +38,117 @@
     "privacy_policy": "מדיניות פרטיות",
     "terms_of_service": "תנאי שימוש",
     "contact": "צור קשר"
+  },
+  "advisor": {
+    "title": "אזור יועץ",
+    "no_mix_yet": "אין עדיין תמהיל מוצע ללקוח הזה.",
+    "views": {
+      "clients": "לקוחות",
+      "tasks": "משימות"
+    },
+    "tabs": {
+      "profile": "פרופיל לקוח",
+      "documents": "מסמכים",
+      "messages": "הודעות"
+    },
+    "messages_placeholder": "כאן יבוא טאב ההודעות מול הלקוח. אין כיום issue שמכוסה לצד היועץ של ההודעות — issue #10 מטפל רק בצד הצרכן.",
+    "client_list": {
+      "empty": "אין לקוחות משויכים",
+      "next_action": "פעולה הבאה",
+      "no_pending_action": "אין פעולה דחופה",
+      "search": "חיפוש לפי שם או תעודת זהות",
+      "no_results": "לא נמצאו לקוחות",
+      "active": "פעילים",
+      "archived": "ארכיון",
+      "archive": "העבר לארכיון",
+      "restore": "שחזר מארכיון"
+    },
+    "documents_tab": {
+      "no_client_selected": "בחר/י לקוח מהרשימה כדי לראות את המסמכים שלו"
+    },
+    "checklist": {
+      "personal": "פרטים אישיים",
+      "mortgage": "נתוני משכנתא",
+      "documents": "מסמכים",
+      "approval": "אישור עקרוני"
+    },
+    "documents": {
+      "approve": "אשר",
+      "reject": "דחה",
+      "reject_reason_label": "סיבת דחייה",
+      "reject_reason_required": "יש להזין סיבת דחייה",
+      "view": "צפייה במסמך",
+      "view_unavailable": "הקובץ עדיין לא הועלה"
+    },
+    "tasks": {
+      "title": "משימות-מעקב",
+      "add": "הוסף משימה",
+      "text_label": "תיאור המשימה",
+      "general": "משימה כללית (לא משויכת ללקוח)",
+      "done_label": "הסתיים",
+      "notes_label": "הערות",
+      "add_note": "הוסף הערה",
+      "delete": "מחיקה",
+      "search": "חיפוש משימה לפי תיאור או שם לקוח",
+      "open_label": "משימות פתוחות",
+      "done_section": "משימות שבוצעו ({{count}})"
+    },
+    "mix_editor": {
+      "route_amount": "סכום מסלול",
+      "route_years": "תקופה (שנים)",
+      "route_anchor": "ריבית עוגן (%)",
+      "route_margin": "מרווח (%)",
+      "route_board": "לוח סילוקין",
+      "route_index": "הצמדה",
+      "board_options": {
+        "שפיצר": "שפיצר",
+        "קרן שווה": "קרן שווה"
+      },
+      "index_options": {
+        "ללא": "ללא",
+        "מדד": "מדד",
+        "דולר": "דולר",
+        "אירו": "אירו"
+      },
+      "first_payment": "החזר חודשי ראשון",
+      "total_payment": "סך כל התשלומים",
+      "total_interest": "ריבית והצמדה",
+      "risk_label": "רמת סיכון"
+    }
+  },
+  "results": {
+    "title": "השעונים שלכם",
+    "subtitle": "5 הצעות תמהיל מותאמות לכם — בחנו את המתאים ביותר",
+    "loan_amount": "סכום משכנתא: ₪{{amount}}",
+    "loading": "מחשב הצעות תמהיל...",
+    "error_title": "שגיאה בחישוב ההצעות",
+    "back_to_questionnaire": "חזרה לשאלון",
+    "metric_monthly": "החזר חודשי התחלתי",
+    "metric_total": "סך תשלומים",
+    "metric_interest": "ריבית + הצמדה",
+    "btn_select": "בחר תמהיל",
+    "btn_selected": "✓ נבחר",
+    "btn_detail": "פירוט",
+    "route_prime": "פריים",
+    "route_variable": "משתנה",
+    "route_fixed": "קבועה",
+    "cta_title": "רוצים המשך טיפול אישי?",
+    "cta_body": "להמשך אפיון אישי ולקבלת ייעוץ מקצועי — המשיכו לרישום למערכת",
+    "cta_register": "המשך לרישום",
+    "cta_back": "חזרה להצעות",
+    "chart_monthly_title": "תשלומים חודשיים (קרן + ריבית)",
+    "chart_cumulative_title": "תשלומים מצטברים",
+    "chart_principal": "קרן",
+    "chart_interest": "ריבית",
+    "chart_principal_cumulative": "קרן מצטברת",
+    "chart_interest_cumulative": "ריבית מצטברת",
+    "chart_month": "חודש {{n}}",
+    "nav_new_mortgage": "משכנתא חדשה",
+    "mix_balanced": "תמהיל מאוזן",
+    "mix_short_risk": "תמהיל קצר סיכון",
+    "mix_long_saving": "תמהיל ארוך חסכוני",
+    "mix_prime_dominant": "תמהיל פריים דומיננטי",
+    "mix_equal_principal": "תמהיל קרן שווה"
   },
   "q": {
     "title": "שאלון משכנתא חדשה",
@@ -86,6 +198,7 @@
       "remove": "הסר",
       "first": "שם פרטי",
       "last": "שם משפחה",
+      "id_number": "תעודת זהות",
       "birth": "תאריך לידה",
       "income": "הכנסה נטו חודשית",
       "is_owner": "בעל/ת הנכס",

@@ -1,0 +1,12 @@
+{
+  "name": "firestore-rules",
+  "description": "Tests for the repo-root firestore.rules file, run against the real Firestore Emulator (@firebase/rules-unit-testing) — not assertions about app code.",
+  "private": true,
+  "scripts": {
+    "test": "npx --yes firebase-tools emulators:exec --only firestore \"node test/rules.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.1",
+    "firebase": "^12.15.0"
+  }
+}
