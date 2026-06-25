@@ -18,7 +18,6 @@ export type LoanPurpose =
   | 'נכס יחיד'
   | 'נכס נוסף'
   | 'לכל מטרה'
-  | 'שיפור דיור'
 
 /** מקור הנכס — story #5. NEW. Drives max-financing %. */
 export type PropertySource =
