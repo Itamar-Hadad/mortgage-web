@@ -1,5 +1,5 @@
 import { test, expect, vi, beforeEach } from 'vitest'
-import type { QuestionnaireDraft } from './draftStore'
+import type { QuestionnaireDraft } from '../../consumer-flow/questionnaire/types'
 
 const docMock = vi.fn()
 const getDocMock = vi.fn()
@@ -16,7 +16,7 @@ vi.mock('firebase/firestore', () => ({
 vi.mock('../../shared/firebase', () => ({ db: {} }))
 
 const { migrateDraftOnSignup } = await import('./migrateDraftOnSignup')
-const { DRAFT_STORAGE_KEY } = await import('./draftStore')
+const { DRAFT_STORAGE_KEY } = await import('../../consumer-flow/questionnaire/types')
 
 const fullDraft: QuestionnaireDraft = {
   version: 1,
@@ -30,6 +30,7 @@ const fullDraft: QuestionnaireDraft = {
   minPay: 4000,
   maxPayDesired: 6000,
   mixes: [],
+  currentStep: 3,
 }
 
 beforeEach(() => {
@@ -67,6 +68,7 @@ test('new user writes the draft once to requests/{uid}, mapped per questionnaire
       additionalIncome: fullDraft.additionalIncome,
       loans: fullDraft.loans,
       mixes: fullDraft.mixes,
+      questionnaireStep: fullDraft.currentStep,
       createdAt: 'server-timestamp',
     }),
   )
@@ -99,6 +101,7 @@ test('new user with no draft (e.g. agent intake never ran) still creates an empt
       additionalIncome: [],
       loans: [],
       mixes: [],
+      questionnaireStep: 0,
     }),
   )
 })

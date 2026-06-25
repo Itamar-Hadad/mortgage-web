@@ -1,12 +1,15 @@
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../shared/firebase'
-import { readDraft, clearDraft, type QuestionnaireDraft } from './draftStore'
+import { readDraftForMigration, clearDraft } from '../../consumer-flow/questionnaire/draftStorage'
+import type { QuestionnaireDraft } from '../../consumer-flow/questionnaire/types'
 
-// Maps the questionnaire's QuestionnaireDraft (questionnaire-draft.md) onto the
-// requests/{uid} shape ARCHITECTURE.md §2/§9 defines: personal[] (=borrowers),
+// Maps the questionnaire's QuestionnaireDraft (docs/contracts/questionnaire-draft.md)
+// onto the requests/{uid} shape ARCHITECTURE.md §2/§9 defines: personal[] (=borrowers),
 // financial (=propertyValue/equity/minPay/maxPayDesired), loans, mixes — plus the
-// fields questionnaire-draft.md flags as new vs. the existing simulator
+// fields the contract flags as new vs. the existing simulator
 // (loanPurpose/propertySource/additionalIncome) kept as their own top-level fields.
+// `currentStep` maps to `questionnaireStep` — ARCHITECTURE.md §9 lists "מצב מסלול"
+// as part of requests/{uid} but doesn't name the field, so this is the #5 side's choice.
 function toRequest(draft: QuestionnaireDraft | null) {
   return {
     personal: draft?.borrowers ?? [],
@@ -21,6 +24,7 @@ function toRequest(draft: QuestionnaireDraft | null) {
     additionalIncome: draft?.additionalIncome ?? [],
     loans: draft?.loans ?? [],
     mixes: draft?.mixes ?? [],
+    questionnaireStep: draft?.currentStep ?? 0,
     createdAt: serverTimestamp(),
   }
 }
@@ -36,7 +40,7 @@ export async function migrateDraftOnSignup(uid: string, isNewUser: boolean): Pro
   const existing = await getDoc(requestRef)
   if (existing.exists()) return
 
-  const draft = readDraft()
+  const draft = readDraftForMigration()
   await setDoc(requestRef, toRequest(draft))
   clearDraft()
 }
