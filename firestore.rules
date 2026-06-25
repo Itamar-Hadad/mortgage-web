@@ -1,23 +1,23 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Owner (#5) and admin (#11) access aren't built yet — each issue adds its
-    // own allow clause here when it lands (see ARCHITECTURE.md §13).
     match /requests/{requestId} {
+      // Admin (#11): full access to every request regardless of assignment.
+      allow read, write: if request.auth != null
+        && request.auth.token.role == 'admin';
+
       // Consumer can read/write their own request aggregate (issues #5, #9)
       allow read, write: if request.auth != null
         && request.auth.uid == requestId
         && request.auth.token.role == 'consumer';
+
       // Advisor can read/write requests assigned to them (issue #8)
       allow read, write: if request.auth != null
         && request.auth.token.role == 'advisor'
         && resource.data.assignedAdvisorUid == request.auth.uid;
     }
 
-    // requests/{uid}/messages — consumer↔advisor thread (issue #10, consumer
-    // side; advisor side is a UI placeholder for now, see ARCHITECTURE.md §13).
-    // sender is validated against the caller's identity so neither side can
-    // post a message impersonating the other.
+    // requests/{uid}/messages — consumer↔advisor thread (issue #10).
     match /requests/{requestId}/messages/{messageId} {
       allow read: if request.auth != null
         && (request.auth.uid == requestId
@@ -28,6 +28,13 @@ service cloud.firestore {
             || (request.auth.token.role == 'advisor'
                 && get(/databases/$(database)/documents/requests/$(requestId)).data.assignedAdvisorUid == request.auth.uid
                 && request.resource.data.sender == 'advisor'));
+    }
+
+    // Managed config (generalRates, riskRules, clockTemplates, monthlyIndices).
+    // Written and read by admin (#11); read by the calc-engine Cloud Function.
+    match /config/{configKey} {
+      allow read, write: if request.auth != null
+        && request.auth.token.role == 'admin';
     }
 
     // advisors' personal follow-up tasks — requestUid is an optional link

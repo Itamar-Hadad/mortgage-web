@@ -26,9 +26,9 @@ test('personal-area route shows its translated placeholder text', () => {
   expect(screen.getByText(he.placeholder.personal_area)).toBeInTheDocument()
 })
 
-test('admin route shows its translated placeholder text', () => {
+test('admin route shows the admin screen', () => {
   renderAt('/admin')
-  expect(screen.getByText(he.placeholder.admin)).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: he.admin.title })).toBeInTheDocument()
 })
 
 test('advisor route shows the advisor screen', () => {
