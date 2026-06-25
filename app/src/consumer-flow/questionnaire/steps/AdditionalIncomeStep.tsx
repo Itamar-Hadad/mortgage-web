@@ -9,10 +9,7 @@ export function AdditionalIncomeStep({ draft, update }: StepProps) {
   const { t } = useTranslation()
 
   function patchRow(index: number, patch: Partial<AdditionalIncome>) {
-    const additionalIncome = draft.additionalIncome.map((r, i) =>
-      i === index ? { ...r, ...patch } : r,
-    )
-    update({ additionalIncome })
+    update({ additionalIncome: draft.additionalIncome.map((r, i) => (i === index ? { ...r, ...patch } : r)) })
   }
 
   function addRow() {
@@ -24,58 +21,58 @@ export function AdditionalIncomeStep({ draft, update }: StepProps) {
   }
 
   return (
-    <fieldset>
-      <legend>{t('q.steps.additional_income')}</legend>
-      <p>{t('q.additional_income.intro')}</p>
+    <div className="space-y-4">
+      <p className="text-sm" style={{ color: 'var(--color-on-surface-variant)' }}>{t('q.additional_income.intro')}</p>
 
-      {draft.additionalIncome.length > 0 && (
-        <table>
-          <thead>
-            <tr>
-              <th>{t('q.additional_income.type')}</th>
-              <th>{t('q.additional_income.amount')}</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {draft.additionalIncome.map((r, i) => (
-              <tr key={i}>
-                <td>
-                  <select
-                    aria-label={`${t('q.additional_income.type')} ${i + 1}`}
-                    value={r.type}
-                    onChange={(e) => patchRow(i, { type: e.target.value as AdditionalIncomeType })}
-                  >
-                    {TYPES.map((ty) => (
-                      <option key={ty} value={ty}>
-                        {ty}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    aria-label={`${t('q.additional_income.amount')} ${i + 1}`}
-                    value={r.amount}
-                    onChange={(e) => patchRow(i, { amount: toNum(e.target.value) })}
-                  />
-                </td>
-                <td>
-                  <button type="button" onClick={() => removeRow(i)}>
-                    {t('q.additional_income.remove')}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      {draft.additionalIncome.map((r, i) => (
+        <div
+          key={i}
+          className="rounded-xl p-4 flex gap-3 items-end"
+          style={{ background: 'var(--color-surface-container-low)', border: '1px solid rgba(188,201,204,0.35)' }}
+        >
+          <div className="flex-1">
+            <label className="ss-label">{t('q.additional_income.type')}</label>
+            <select
+              className="ss-input"
+              aria-label={`${t('q.additional_income.type')} ${i + 1}`}
+              value={r.type}
+              onChange={(e) => patchRow(i, { type: e.target.value as AdditionalIncomeType })}
+            >
+              {TYPES.map((ty) => <option key={ty} value={ty}>{ty}</option>)}
+            </select>
+          </div>
+          <div className="flex-1">
+            <label className="ss-label">{t('q.additional_income.amount')} (₪)</label>
+            <input
+              type="number"
+              inputMode="numeric"
+              className="ss-input"
+              aria-label={`${t('q.additional_income.amount')} ${i + 1}`}
+              value={r.amount}
+              onChange={(e) => patchRow(i, { amount: toNum(e.target.value) })}
+              placeholder="0"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => removeRow(i)}
+            className="mb-0.5 p-2 rounded-lg transition-colors flex-shrink-0"
+            style={{ color: 'var(--color-error)', background: 'var(--color-error-container)' }}
+          >
+            <span className="material-symbols-outlined text-xl">delete</span>
+          </button>
+        </div>
+      ))}
 
-      <button type="button" onClick={addRow}>
+      <button
+        type="button"
+        onClick={addRow}
+        className="w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors border-2 border-dashed"
+        style={{ borderColor: 'var(--color-primary)', color: 'var(--color-primary)', background: 'transparent' }}
+      >
+        <span className="material-symbols-outlined text-xl">add</span>
         {t('q.additional_income.add')}
       </button>
-    </fieldset>
+    </div>
   )
 }

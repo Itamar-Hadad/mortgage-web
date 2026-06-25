@@ -23,81 +23,83 @@ export function LoansStep({ draft, update }: StepProps) {
   }
 
   return (
-    <fieldset>
-      <legend>{t('q.steps.loans')}</legend>
-      <p>{t('q.loans.intro')}</p>
+    <div className="space-y-4">
+      <p className="text-sm" style={{ color: 'var(--color-on-surface-variant)' }}>{t('q.loans.intro')}</p>
 
-      {draft.loans.length > 0 && (
-        <table>
-          <thead>
-            <tr>
-              <th>{t('q.loans.remain')}</th>
-              <th>{t('q.loans.monthly')}</th>
-              <th>{t('q.loans.end_date')}</th>
-              <th>{t('q.loans.rate')}</th>
-              <th>{t('q.loans.source')}</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {draft.loans.map((l, i) => (
-              <tr key={i}>
-                <td>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    aria-label={`${t('q.loans.remain')} ${i + 1}`}
-                    value={l.remain}
-                    onChange={(e) => patchRow(i, { remain: toNum(e.target.value) })}
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    aria-label={`${t('q.loans.monthly')} ${i + 1}`}
-                    value={l.monthlyPayment}
-                    onChange={(e) => patchRow(i, { monthlyPayment: toNum(e.target.value) })}
-                  />
-                </td>
-                <td>
-                  <input
-                    type="date"
-                    aria-label={`${t('q.loans.end_date')} ${i + 1}`}
-                    value={l.endDate}
-                    onChange={(e) => patchRow(i, { endDate: e.target.value })}
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    aria-label={`${t('q.loans.rate')} ${i + 1}`}
-                    value={l.rate}
-                    onChange={(e) => patchRow(i, { rate: toNum(e.target.value) })}
-                  />
-                </td>
-                <td>
-                  <input
-                    aria-label={`${t('q.loans.source')} ${i + 1}`}
-                    value={l.source}
-                    onChange={(e) => patchRow(i, { source: e.target.value })}
-                  />
-                </td>
-                <td>
-                  <button type="button" onClick={() => removeRow(i)}>
-                    {t('q.loans.remove')}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      {draft.loans.map((l, i) => (
+        <div
+          key={i}
+          className="rounded-xl p-5 space-y-3"
+          style={{ background: 'var(--color-surface-container-low)', border: '1px solid rgba(188,201,204,0.35)' }}
+        >
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-sm" style={{ color: 'var(--color-secondary)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              הלוואה {i + 1}
+            </span>
+            <button
+              type="button"
+              onClick={() => removeRow(i)}
+              className="text-sm font-semibold flex items-center gap-1"
+              style={{ color: 'var(--color-error)' }}
+            >
+              <span className="material-symbols-outlined text-base">delete</span>
+              {t('q.loans.remove')}
+            </button>
+          </div>
 
-      <button type="button" onClick={addRow}>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="ss-label">{t('q.loans.remain')} (₪)</label>
+              <input type="number" inputMode="numeric" className="ss-input"
+                aria-label={`${t('q.loans.remain')} ${i + 1}`}
+                value={l.remain} placeholder="0"
+                onChange={(e) => patchRow(i, { remain: toNum(e.target.value) })} />
+            </div>
+            <div>
+              <label className="ss-label">{t('q.loans.monthly')} (₪)</label>
+              <input type="number" inputMode="numeric" className="ss-input"
+                aria-label={`${t('q.loans.monthly')} ${i + 1}`}
+                value={l.monthlyPayment} placeholder="0"
+                onChange={(e) => patchRow(i, { monthlyPayment: toNum(e.target.value) })} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="ss-label">{t('q.loans.end_date')}</label>
+              <input type="date" className="ss-input"
+                aria-label={`${t('q.loans.end_date')} ${i + 1}`}
+                value={l.endDate}
+                onChange={(e) => patchRow(i, { endDate: e.target.value })} />
+            </div>
+            <div>
+              <label className="ss-label">{t('q.loans.rate')}</label>
+              <input type="number" inputMode="decimal" className="ss-input"
+                aria-label={`${t('q.loans.rate')} ${i + 1}`}
+                value={l.rate} placeholder="3.5"
+                onChange={(e) => patchRow(i, { rate: toNum(e.target.value) })} />
+            </div>
+          </div>
+
+          <div>
+            <label className="ss-label">{t('q.loans.source')}</label>
+            <input className="ss-input"
+              aria-label={`${t('q.loans.source')} ${i + 1}`}
+              value={l.source} placeholder="בנק לאומי"
+              onChange={(e) => patchRow(i, { source: e.target.value })} />
+          </div>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={addRow}
+        className="w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 border-2 border-dashed transition-colors"
+        style={{ borderColor: 'var(--color-primary)', color: 'var(--color-primary)', background: 'transparent' }}
+      >
+        <span className="material-symbols-outlined text-xl">add</span>
         {t('q.loans.add')}
       </button>
-    </fieldset>
+    </div>
   )
 }
