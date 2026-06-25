@@ -123,6 +123,8 @@
 | שפה (ADR-0004) | i18next עם `he.json` בלבד | כל מחרוזת עוברת `t('key')`, אין hardcoded inline | הוספת `ru.json`/`fr.json`/`en.json` — אפס refactor בקומפוננטות |
 | דוחות בנק למחזור (סעיף 10) | לא בנוי בסבב הזה | — | 5 ה-parsers הקיימים מהסימולטור עוברים כמו שהם ל-Cloud Function ייעודי כשנבנה מחזור משכנתא |
 | מנוע חישוב (סעיף 6) | `calcRoute`/`calcMix` רץ client-side (מנהל/יועץ) + Cloud Function (קצה) מאותו קוד מקור | חתימת הפונקציות (route/params in → calc object out) | הוספת board/route type חדש נכנסת בתוך `calcRoute` בלי לשבור את הפיצול client/Cloud Function |
+| מיון רשימת לקוחות ליועץ (#8) | `nextActionDate(request)` מחשב לפי המסמך הממתין-לבדיקה הישן ביותר בלבד — אין עדיין מקור-נתונים ל"הודעות חדשות" (#10 חסום) | חתימת `nextActionDate(request): Date \| null`, ערך נמוך יותר = דחוף יותר | כש-#10 (הודעות ליועץ) ייבנה — הפונקציה תקבל קלט שני (תאריך הודעה לא-נקראת) ותחזיר את המוקדם מבין השניים, בלי לשנות צרכנים קיימים |
+| משימות-מעקב ליועץ (#8) | קולקשיין `tasks` נפרד, נוצר רק ידנית ע"י היועץ (`requestUid` אופציונלי לקישור ללקוח) | מבנה מסמך `{advisorUid, requestUid\|null, text, dueDate?, done, createdAt}` | יצירה אוטומטית של משימת-מעקב כששיוך לקוח↔יועץ חדש נקבע (#11, מנהל) — לא נבנה כרגע, אין AC שדורש זאת |
 | Roles (סעיף 1-2) | 3 ערכי custom claim: consumer/advisor/admin | שם השדה `role` ב-custom claims + `assignedAdvisorUid` בכל בקשה | תפקיד נוסף (לדוגמה "responsible compliance") = ערך claim חדש + ענף חדש בחוקי Firestore, לא מודל חדש |
 
 ## 14. סוכני AI (תוספת בידול — לא במסמך הלקוח המקורי, ADR-0006)

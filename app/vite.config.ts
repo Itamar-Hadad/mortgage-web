@@ -9,5 +9,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    // *.emulator.test.ts needs a live Firestore Emulator — run via `npm run test:firestore`, not the default `npm test`.
+    exclude: ['**/node_modules/**', '**/*.emulator.test.ts'],
   },
 })
