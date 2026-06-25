@@ -1,6 +1,6 @@
 {
   "name": "functions",
-  "description": "Cloud Functions wrapping the calc-engine module (issue #3) so consumer-facing screens get calc results without the formulas ever reaching their bundle.",
+  "description": "Cloud Functions wrapping the calc-engine module (issue #3) and assigning the consumer role claim on signup (issue #5).",
   "main": "lib/index.js",
   "engines": {
     "node": "20"
@@ -8,16 +8,18 @@
   "scripts": {
     "sync-calc-engine": "node ./sync-calc-engine.mjs",
     "build": "npm run sync-calc-engine && tsc",
-    "test": "npm run build && npx --yes firebase-tools emulators:exec --only functions \"node test/calcEngine.emulator.test.mjs\"",
+    "test": "vitest run",
+    "test:emulator": "npm run build && npx --yes firebase-tools emulators:exec --only functions \"node test/calcEngine.emulator.test.mjs\"",
     "serve": "npm run build && npx --yes firebase-tools emulators:start --only functions"
   },
   "dependencies": {
-    "firebase-admin": "^14.1.0",
+    "firebase-admin": "^13.5.0",
     "firebase-functions": "^6.0.1"
   },
   "devDependencies": {
     "firebase": "^12.15.0",
-    "typescript": "~5.7.0"
+    "typescript": "~5.7.0",
+    "vitest": "^4.1.9"
   },
   "private": true
 }

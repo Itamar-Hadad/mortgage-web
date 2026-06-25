@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '../../shared/firebase'
+import { db, auth } from '../../shared/firebase'
 import { readDraft } from '../../consumer-flow/questionnaire/draftStorage'
 import type { QuestionnaireDraft } from '../../consumer-flow/questionnaire/types'
 
@@ -8,16 +8,6 @@ export type Track = 'רכישת תמהיל' | 'ליווי אינטרנטי' | '�
 export type SectionKey = 'personal' | 'mortgage' | 'credentials' | 'payment'
 
 const TRACK_KEY = 'simplesave:track:v1'
-const UID_KEY = 'simplesave:uid:temp'
-
-function getOrCreateUid(): string {
-  // TODO(issue-5): replace with auth.currentUser?.uid after registration wired
-  const existing = localStorage.getItem(UID_KEY)
-  if (existing) return existing
-  const id = crypto.randomUUID()
-  localStorage.setItem(UID_KEY, id)
-  return id
-}
 
 function isBorrowerComplete(b: QuestionnaireDraft['borrowers'][0]): boolean {
   return !!(b.first && b.last && b.birth && b.income !== '')
@@ -35,7 +25,7 @@ export function usePersonalArea() {
   const [signatureLoading, setSignatureLoading] = useState(false)
   const [signatureError, setSignatureError] = useState('')
 
-  const uid = getOrCreateUid()
+  const uid = auth.currentUser?.uid ?? ''
   const draft = readDraft()
 
   const selectTrack = useCallback((t: Track) => {
