@@ -5,7 +5,7 @@ import { readDraft } from '../../consumer-flow/questionnaire/draftStorage'
 import type { QuestionnaireDraft } from '../../consumer-flow/questionnaire/types'
 
 export type Track = 'רכישת תמהיל' | 'ליווי אינטרנטי' | 'יועץ אישי'
-export type SectionKey = 'personal' | 'mortgage' | 'credentials' | 'payment'
+export type SectionKey = 'personal' | 'mortgage' | 'credentials' | 'documents' | 'payment'
 
 const TRACK_KEY = 'simplesave:track:v1'
 
@@ -21,6 +21,7 @@ export function usePersonalArea() {
   const [personalDone, setPersonalDone] = useState(false)
   const [mortgageDone, setMortgageDone] = useState(false)
   const [signatureDone, setSignatureDone] = useState(false)
+  const [documentsDone, setDocumentsDone] = useState(false)
   const [paymentDone, setPaymentDone] = useState(false)
   const [signatureLoading, setSignatureLoading] = useState(false)
   const [signatureError, setSignatureError] = useState('')
@@ -53,15 +54,18 @@ export function usePersonalArea() {
         docVersion: '1.0',
       })
       setSignatureDone(true)
-      if (track === 'רכישת תמהיל') {
-        setActiveSection('payment')
-      }
+      setActiveSection('documents')
     } catch (e) {
       setSignatureError((e as Error).message)
     } finally {
       setSignatureLoading(false)
     }
   }, [uid, track])
+
+  const completeDocuments = useCallback(() => {
+    setDocumentsDone(true)
+    if (track === 'רכישת תמהיל') setActiveSection('payment')
+  }, [track])
 
   const completePayment = useCallback(() => {
     setPaymentDone(true)
@@ -72,17 +76,18 @@ export function usePersonalArea() {
       case 'personal': return true
       case 'mortgage': return personalDone
       case 'credentials': return mortgageDone
-      case 'payment': return track === 'רכישת תמהיל' && signatureDone
+      case 'documents': return signatureDone
+      case 'payment': return track === 'רכישת תמהיל' && documentsDone
     }
-  }, [personalDone, mortgageDone, signatureDone, track])
+  }, [personalDone, mortgageDone, signatureDone, documentsDone, track])
 
   const borrowersComplete = draft.borrowers.every(isBorrowerComplete)
 
   return {
     uid, track, selectTrack,
     activeSection, setActiveSection,
-    personalDone, mortgageDone, signatureDone, paymentDone,
-    completePersonal, completeMortgage, signCredentials, completePayment,
+    personalDone, mortgageDone, signatureDone, documentsDone, paymentDone,
+    completePersonal, completeMortgage, signCredentials, completeDocuments, completePayment,
     signatureLoading, signatureError,
     isSectionUnlocked,
     draft,

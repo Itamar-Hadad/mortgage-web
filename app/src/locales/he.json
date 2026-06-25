@@ -116,6 +116,19 @@
       "risk_label": "רמת סיכון"
     }
   },
+  "documents": {
+    "title": "מסמכים",
+    "subtitle": "העלו את המסמכים הנדרשים להמשך הליך המשכנתא",
+    "counter": "{{uploaded}} מתוך {{total}} מסמכים הועלו",
+    "upload": "העלאת קובץ",
+    "reupload": "העלה שוב",
+    "uploading": "מעלה...",
+    "upload_error": "שגיאה בהעלאה, נסו שוב",
+    "rejection_reason": "סיבת דחייה",
+    "all_approved": "כל המסמכים אושרו ✓",
+    "all_approved_title": "כל המסמכים אושרו!",
+    "all_approved_body": "הצוות שלנו יצור אתכם קשר להמשך התהליך"
+  },
   "results": {
     "title": "השעונים שלכם",
     "subtitle": "5 הצעות תמהיל מותאמות לכם — בחנו את המתאים ביותר",
