@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useCalcMixes } from './useCalcMixes'
 import { Speedometer } from './Speedometer'
 import { MixDetailChart } from './MixDetailChart'
@@ -28,6 +29,7 @@ interface Props {
 
 export function ResultsPage({ draft, onRestart }: Props) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { results, status, error } = useCalcMixes(draft)
   const [openDetail, setOpenDetail] = useState<string | null>(null)
   const [showCta, setShowCta] = useState(false)
@@ -166,6 +168,7 @@ export function ResultsPage({ draft, onRestart }: Props) {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <button
+                      onClick={() => navigate('/sign-up')}
                       className="rounded-full font-bold py-3 px-8 transition-all hover:brightness-110 active:scale-95"
                       style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)', boxShadow: '0 8px 20px -6px rgba(0,104,117,0.35)' }}>
                       {t('results.cta_register')}
