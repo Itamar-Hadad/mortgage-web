@@ -17,6 +17,19 @@ service cloud.firestore {
         && resource.data.assignedAdvisorUid == request.auth.uid;
     }
 
+    // requests/{uid}/messages — consumer↔advisor thread (issue #10).
+    match /requests/{requestId}/messages/{messageId} {
+      allow read: if request.auth != null
+        && (request.auth.uid == requestId
+            || (request.auth.token.role == 'advisor'
+                && get(/databases/$(database)/documents/requests/$(requestId)).data.assignedAdvisorUid == request.auth.uid));
+      allow create: if request.auth != null
+        && ((request.auth.uid == requestId && request.resource.data.sender == 'consumer')
+            || (request.auth.token.role == 'advisor'
+                && get(/databases/$(database)/documents/requests/$(requestId)).data.assignedAdvisorUid == request.auth.uid
+                && request.resource.data.sender == 'advisor'));
+    }
+
     // Managed config (generalRates, riskRules, clockTemplates, monthlyIndices).
     // Written and read by admin (#11); read by the calc-engine Cloud Function.
     match /config/{configKey} {
