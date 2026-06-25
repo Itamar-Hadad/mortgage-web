@@ -62,6 +62,50 @@ export interface ExistingLoan {
   source: string
 }
 
+/**
+ * מסלול בודד בתוך תמהיל — mirrors the simulator's `blankRoute()` input fields.
+ * Produced by the calc engine (issue #3); the questionnaire never writes this.
+ */
+export interface MixRoute {
+  /** סוג מסלול. */
+  kind: 'fixed' | 'variable' | 'prime'
+  /** אחוז מהתמהיל (0-100). */
+  sharePct: number
+  /** סכום המסלול. */
+  amount: number
+  /** תקופה בשנים. */
+  years: number
+  /** לוח סילוקין — שפיצר / קרן שווה. */
+  board: 'שפיצר' | 'קרן שווה'
+  /** הצמדה — ללא / מדד / דולר / אירו. */
+  indexType: 'ללא' | 'מדד' | 'דולר' | 'אירו'
+  /** ריבית עוגן (decimal, e.g. 0.046). */
+  anchor: number
+  /** מרווח (decimal). */
+  margin: number
+}
+
+/**
+ * תמהיל מוצע ("שעון") — one of the 5 offers shown after the questionnaire.
+ * **Produced by the calc engine (issue #3)**, appended to the draft before
+ * registration so #4/#5 persist it to `requests/{uid}`. Empty until #3 runs.
+ */
+export interface ProposedMix {
+  /** מזהה יציב לתמהיל (e.g. 't1'..'t5'), mirrors the simulator's mix keys. */
+  id: string
+  /** שם תצוגה (e.g. "תמהיל מאוזן"). */
+  name: string
+  routes: MixRoute[]
+  /** רמת סיכון 1-5 (mixRisk). */
+  risk: number
+  /** החזר חודשי ראשון — calc result. */
+  firstMonthlyPayment: number
+  /** סך כל התשלומים — calc result. */
+  totalPayment: number
+  /** סך ריבית + הצמדה — calc result. */
+  totalInterestAndIndexation: number
+}
+
 export interface QuestionnaireDraft {
   /** Schema version, lets future consumers migrate safely. */
   version: 1
@@ -78,6 +122,11 @@ export interface QuestionnaireDraft {
   minPay: number | ''
   /** מקס׳ החזר חודשי רצוי — mirrors simulator `financial.maxPayDesired`. */
   maxPayDesired: number | ''
+  /**
+   * 5 התמהילים שהוצעו אחרי החישוב. Empty array until the calc engine (#3)
+   * fills it. Persisted as-is to `requests/{uid}.mixes` on registration (#4/#5).
+   */
+  mixes: ProposedMix[]
 }
 
 export function emptyBorrower(): Borrower {
@@ -96,5 +145,6 @@ export function emptyDraft(): QuestionnaireDraft {
     loans: [],
     minPay: '',
     maxPayDesired: '',
+    mixes: [],
   }
 }

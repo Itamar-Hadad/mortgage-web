@@ -1,27 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  DRAFT_STORAGE_KEY,
-  emptyDraft,
-  type QuestionnaireDraft,
-} from './types'
+import { emptyDraft, type QuestionnaireDraft } from './types'
+import { clearDraft, readDraft, writeDraft } from './draftStorage'
 
-// Single hook wrapping localStorage read/write for the questionnaire draft.
-// This is the isolated client-state layer named in ARCHITECTURE.md §13 (ADR-0001):
-// "שכבת ה-state בצד הקליינט (hook אחד שעוטף read/write)". Downstream consumers and
-// tests go through this hook, never localStorage directly (per PRD Testing Decisions).
-
-function readDraft(): QuestionnaireDraft {
-  try {
-    const raw = localStorage.getItem(DRAFT_STORAGE_KEY)
-    if (!raw) return emptyDraft()
-    const parsed = JSON.parse(raw) as Partial<QuestionnaireDraft>
-    // Merge over an empty draft so missing/older fields get sane defaults.
-    return { ...emptyDraft(), ...parsed, version: 1 }
-  } catch {
-    // Corrupt JSON or unavailable storage — start clean rather than crash.
-    return emptyDraft()
-  }
-}
+// React state layer over the questionnaire draft, built on the framework-free
+// helpers in draftStorage.ts. This is the isolated client-state seam from
+// ARCHITECTURE.md §13 (ADR-0001): "שכבת ה-state בצד הקליינט (hook אחד שעוטף read/write)".
+// Components and tests go through this hook; issue #5 reads via draftStorage directly.
 
 export interface UseDraftResult {
   draft: QuestionnaireDraft
@@ -43,11 +27,7 @@ export function useDraft(): UseDraftResult {
       skipNextPersist.current = false
       return
     }
-    try {
-      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft))
-    } catch {
-      // Storage full/blocked — nothing actionable here; the in-memory draft still works.
-    }
+    writeDraft(draft)
   }, [draft])
 
   const update = useCallback((patch: Partial<QuestionnaireDraft>) => {
@@ -55,11 +35,7 @@ export function useDraft(): UseDraftResult {
   }, [])
 
   const clear = useCallback(() => {
-    try {
-      localStorage.removeItem(DRAFT_STORAGE_KEY)
-    } catch {
-      // ignore
-    }
+    clearDraft()
     // Don't let the autosave effect re-persist the empty draft after we just wiped it.
     skipNextPersist.current = true
     setDraft(emptyDraft())
