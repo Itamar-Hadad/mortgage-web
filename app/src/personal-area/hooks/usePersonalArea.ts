@@ -5,7 +5,7 @@ import { readDraft } from '../../consumer-flow/questionnaire/draftStorage'
 import type { QuestionnaireDraft } from '../../consumer-flow/questionnaire/types'
 
 export type Track = 'רכישת תמהיל' | 'ליווי אינטרנטי' | 'יועץ אישי'
-export type SectionKey = 'personal' | 'mortgage' | 'credentials' | 'payment'
+export type SectionKey = 'personal' | 'mortgage' | 'credentials' | 'payment' | 'messages'
 
 const TRACK_KEY = 'simplesave:track:v1'
 
@@ -73,6 +73,7 @@ export function usePersonalArea() {
       case 'mortgage': return personalDone
       case 'credentials': return mortgageDone
       case 'payment': return track === 'רכישת תמהיל' && signatureDone
+      case 'messages': return true
     }
   }, [personalDone, mortgageDone, signatureDone, track])
 

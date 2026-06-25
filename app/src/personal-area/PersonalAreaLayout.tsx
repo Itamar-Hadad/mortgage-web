@@ -21,6 +21,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { key: 'mortgage', label: 'נתוני משכנתא', icon: 'account_balance', visibleForTracks: 'all' },
   { key: 'credentials', label: 'כתבי הסמכה', icon: 'description', visibleForTracks: 'all' },
   { key: 'payment', label: 'תשלום', icon: 'payments', visibleForTracks: ['רכישת תמהיל'] },
+  { key: 'messages', label: 'הודעות', icon: 'chat', visibleForTracks: 'all' },
 ]
 
 interface Props {

@@ -5,10 +5,11 @@ import { PersonalDetailsSection } from './sections/PersonalDetailsSection'
 import { MortgageDataSection } from './sections/MortgageDataSection'
 import { CredentialsSection } from './sections/CredentialsSection'
 import { PaymentSection } from './sections/PaymentSection'
+import { MessagesSection } from './sections/MessagesSection'
 
 export function PersonalArea() {
   const {
-    track, selectTrack,
+    uid, track, selectTrack,
     activeSection, setActiveSection,
     personalDone, mortgageDone, signatureDone, paymentDone,
     completePersonal, completeMortgage, signCredentials, completePayment,
@@ -59,6 +60,10 @@ export function PersonalArea() {
           onComplete={completePayment}
           done={paymentDone}
         />
+      )}
+
+      {activeSection === 'messages' && (
+        <MessagesSection uid={uid} />
       )}
     </PersonalAreaLayout>
   )
