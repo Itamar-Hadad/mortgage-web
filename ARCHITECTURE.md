@@ -4,6 +4,8 @@
 
 למינוח מלא ראו [CONTEXT.md](./CONTEXT.md). להחלטות שהתקבלו בעקבות שקילת חלופות אמיתיות ראו [docs/adr/](./docs/adr/).
 
+**עקרון מנחה:** כל מודול נבנה פשוט כפי שצריך להאקתון, אבל עם **נקודת הרחבה מתועדת ומפורשת** — לא implicit. כשמחליטים על גרסה מקוצרת/MVP, רושמים בדיוק מה הממשק/החוזה שצריך להישאר קבוע כדי שההחלפה העתידית לא תדרוש שינוי בצרכנים של המודול. ראו טבלה בסעיף 13.
+
 ## 1. תפקידים (Roles)
 
 | תפקיד | מקור | הערות |
@@ -103,3 +105,18 @@
 ## 12. שאלה פתוחה אחת שנותרה — לא ניתנת לפתרון טכני
 
 - **"הטמעת 5 סעיפי וריפיקציה" (10% מהמחוון)** — `מחוון לציון הפרוייקט (3).docx` לא מגדיר בפועל מה הם 5 הסעיפים. יש לברר עם קרן כליף/הנחיות ההאקתון — זו לא החלטה ארכיטקטונית, אלא פרט-הגשה חיצוני שחסר.
+
+## 13. נקודות הרחבה ידועות (Known Extension Points)
+
+כל שורה: מה בנינו עכשיו (MVP/האקתון), מה החוזה שצריך להישאר קבוע, ומה ההרחבה העתידית. **בכל פעם שמחליטים על גרסה מקוצרת חדשה — מוסיפים שורה כאן**, לא משאירים implicit.
+
+| מודול | המימוש עכשיו | החוזה הקבוע (לא משתנה בהרחבה) | ההרחבה העתידית |
+|---|---|---|---|
+| תשלום (ADR-0003) | Cloud Function מסמן `paymentStatus` מדומה | קריאת ה-Cloud Function מהקליינט (שם/פרמטרים/תשובה) | אינטגרציית PayPlus אמיתית מאחורי אותה function |
+| כתבי הסמכה | checkbox "קראתי ואני מאשר" + uid+timestamp ב-Firestore | שדה `signatureEvent{uid, timestamp, docVersion}` | ספק e-signature אמיתי (כמו DocuSign) כותב לאותו שדה |
+| התקדמות סקרן (ADR-0001) | localStorage בלבד, אין Firebase לפני הרשמה | שכבת ה-state בצד הקליינט (hook אחד שעוטף read/write) | Firebase Anonymous Auth + TTL אם יתעורר צורך ברציפות בין מכשירים — הוערך ונדחה, אך השכבה מבודדת |
+| הודעות ליועץ | Firestore subcollection + `onSnapshot` | מבנה מסמך `{sender, text, timestamp}` | שכבת push notifications / SDK chat חיצוני אם הנפח יגדל |
+| שפה (ADR-0004) | i18next עם `he.json` בלבד | כל מחרוזת עוברת `t('key')`, אין hardcoded inline | הוספת `ru.json`/`fr.json`/`en.json` — אפס refactor בקומפוננטות |
+| דוחות בנק למחזור (סעיף 10) | לא בנוי בסבב הזה | — | 5 ה-parsers הקיימים מהסימולטור עוברים כמו שהם ל-Cloud Function ייעודי כשנבנה מחזור משכנתא |
+| מנוע חישוב (סעיף 6) | `calcRoute`/`calcMix` רץ client-side (מנהל/יועץ) + Cloud Function (קצה) מאותו קוד מקור | חתימת הפונקציות (route/params in → calc object out) | הוספת board/route type חדש נכנסת בתוך `calcRoute` בלי לשבור את הפיצול client/Cloud Function |
+| Roles (סעיף 1-2) | 3 ערכי custom claim: consumer/advisor/admin | שם השדה `role` ב-custom claims + `assignedAdvisorUid` בכל בקשה | תפקיד נוסף (לדוגמה "responsible compliance") = ערך claim חדש + ענף חדש בחוקי Firestore, לא מודל חדש |
