@@ -17,9 +17,9 @@ function renderAt(path: string) {
   )
 }
 
-test('consumer-flow route shows its translated placeholder text', () => {
+test('home route shows the questionnaire title', () => {
   renderAt('/')
-  expect(screen.getByText(he.placeholder.consumer_flow)).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: he.q.title })).toBeInTheDocument()
 })
 
 test('personal-area route shows its translated placeholder text', () => {
