@@ -21,3 +21,6 @@ firebase-debug.log
 firebase-debug.*.log
 ui-debug.log
 *.tsbuildinfo
+
+# Playwright MCP verification artifacts
+.playwright-mcp/
