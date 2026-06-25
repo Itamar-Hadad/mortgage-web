@@ -23,16 +23,17 @@ function TaskRow({
   const { t } = useTranslation()
   const [showNotes, setShowNotes] = useState(Boolean(task.notes))
   return (
-    <li className="space-y-1">
-      <div className="flex items-center gap-2">
+    <li className="rounded-xl p-3 space-y-2" style={{ background: 'var(--color-surface-container-low)' }}>
+      <div className="flex items-center gap-3 flex-wrap">
         <input
           type="checkbox"
           aria-label={t('advisor.tasks.done_label')}
           checked={task.done}
           onChange={(e) => onUpdate({ done: e.target.checked })}
+          className="w-5 h-5"
         />
         <span
-          className="text-sm flex-1"
+          className="text-base font-semibold flex-1"
           style={{ color: 'var(--color-on-surface)', textDecoration: task.done ? 'line-through' : 'none' }}
         >
           {task.text}
@@ -41,8 +42,8 @@ function TaskRow({
           <button
             type="button"
             onClick={() => setShowNotes(true)}
-            className="text-xs font-semibold"
-            style={{ color: 'var(--color-on-surface-variant)' }}
+            className="text-sm font-bold px-3 py-1.5 rounded-full"
+            style={{ border: '1px solid var(--color-outline-variant)', color: 'var(--color-on-surface-variant)' }}
           >
             {t('advisor.tasks.add_note')}
           </button>
@@ -51,8 +52,8 @@ function TaskRow({
           type="button"
           onClick={onDelete}
           aria-label={`${t('advisor.tasks.delete')} — ${task.text}`}
-          className="text-xs font-semibold"
-          style={{ color: 'var(--color-error)' }}
+          className="text-sm font-bold px-3 py-1.5 rounded-full"
+          style={{ border: '1px solid var(--color-error)', color: 'var(--color-error)' }}
         >
           {t('advisor.tasks.delete')}
         </button>
