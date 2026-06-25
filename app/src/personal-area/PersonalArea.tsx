@@ -4,6 +4,7 @@ import { PersonalAreaLayout } from './PersonalAreaLayout'
 import { PersonalDetailsSection } from './sections/PersonalDetailsSection'
 import { MortgageDataSection } from './sections/MortgageDataSection'
 import { CredentialsSection } from './sections/CredentialsSection'
+import { DocumentsSection } from './sections/DocumentsSection'
 import { PaymentSection } from './sections/PaymentSection'
 import { MessagesSection } from './sections/MessagesSection'
 
@@ -11,8 +12,8 @@ export function PersonalArea() {
   const {
     uid, track, selectTrack,
     activeSection, setActiveSection,
-    personalDone, mortgageDone, signatureDone, paymentDone,
-    completePersonal, completeMortgage, signCredentials, completePayment,
+    personalDone, mortgageDone, signatureDone, documentsDone, paymentDone,
+    completePersonal, completeMortgage, signCredentials, completeDocuments, completePayment,
     signatureLoading, signatureError,
     isSectionUnlocked,
     draft,
@@ -55,7 +56,15 @@ export function PersonalArea() {
         />
       )}
 
-      {activeSection === 'payment' && signatureDone && track === 'רכישת תמהיל' && (
+      {activeSection === 'documents' && signatureDone && (
+        <DocumentsSection
+          uid={uid}
+          draft={draft}
+          onComplete={completeDocuments}
+        />
+      )}
+
+      {activeSection === 'payment' && documentsDone && track === 'רכישת תמהיל' && (
         <PaymentSection
           onComplete={completePayment}
           done={paymentDone}

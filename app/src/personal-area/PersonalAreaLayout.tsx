@@ -20,6 +20,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { key: 'personal', label: 'פרטים אישיים', icon: 'person', visibleForTracks: 'all' },
   { key: 'mortgage', label: 'נתוני משכנתא', icon: 'account_balance', visibleForTracks: 'all' },
   { key: 'credentials', label: 'כתבי הסמכה', icon: 'description', visibleForTracks: 'all' },
+  { key: 'documents', label: 'מסמכים', icon: 'folder_open', visibleForTracks: 'all' },
   { key: 'payment', label: 'תשלום', icon: 'payments', visibleForTracks: ['רכישת תמהיל'] },
   { key: 'messages', label: 'הודעות', icon: 'chat', visibleForTracks: 'all' },
 ]

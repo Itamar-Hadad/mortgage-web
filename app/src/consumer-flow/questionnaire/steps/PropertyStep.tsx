@@ -6,7 +6,6 @@ const LOAN_PURPOSES: { value: LoanPurpose; icon: string; labelKey: string }[] = 
   { value: 'נכס יחיד',   icon: 'home',              labelKey: 'q.loan_purpose_options.single' },
   { value: 'נכס נוסף',   icon: 'apartment',         labelKey: 'q.loan_purpose_options.additional' },
   { value: 'לכל מטרה',  icon: 'sync_alt',           labelKey: 'q.loan_purpose_options.any' },
-  { value: 'שיפור דיור', icon: 'upgrade',            labelKey: 'q.loan_purpose_options.improvement' },
 ]
 
 const PROPERTY_SOURCES: { value: PropertySource; icon: string; labelKey: string }[] = [
