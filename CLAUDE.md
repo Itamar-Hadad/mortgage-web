@@ -51,3 +51,19 @@ Single-page, tab-based app, RTL Hebrew UI, no framework — plain DOM constructi
 ## Context from the design doc
 
 `עיצוב מערכת 6.26((.docx` describes "SimpleSave" — a far larger planned product (lead intake, OTP-based personal area, advisor/admin areas, document upload & bank-approval workflow, eligibility-loan calculations, multi-language support). The HTML simulator in this repo implements only the calculator/comparison core of that spec (personal+financial intake → mix builder → five-way comparison → schedule). When making product-shaped decisions (terminology, field names, bank lists, risk-rule tiers), prefer matching the Hebrew terminology already used in the HTML/doc rather than inventing new terms.
+
+The re-platform effort (React + Firebase) is specified in `ARCHITECTURE.md`, `CONTEXT.md`, and `docs/adr/` at the repo root — see the `## Agent skills` section below for how engineering skills should consume them.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on `Itamar-Hadad/mortgage-web`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical names used as-is, no overrides (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context repo: `CONTEXT.md` + `docs/adr/` at the repo root, plus `ARCHITECTURE.md` for system-level decisions. See `docs/agents/domain.md`.
