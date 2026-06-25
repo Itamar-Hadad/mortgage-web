@@ -3,14 +3,16 @@ import { I18nextProvider } from 'react-i18next'
 import i18n from './shared/i18n'
 import { Questionnaire } from './consumer-flow/questionnaire/Questionnaire'
 import { PersonalAreaPlaceholder } from './personal-area/PersonalAreaPlaceholder'
-import { AdminAdvisorPlaceholder } from './admin-advisor/AdminAdvisorPlaceholder'
+import { AdminPlaceholder } from './admin/AdminPlaceholder'
+import { AdvisorScreen } from './advisor/AdvisorScreen'
 
 export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Questionnaire />} />
       <Route path="/personal-area" element={<PersonalAreaPlaceholder />} />
-      <Route path="/admin-advisor" element={<AdminAdvisorPlaceholder />} />
+      <Route path="/advisor" element={<AdvisorScreen />} />
+      <Route path="/admin" element={<AdminPlaceholder />} />
     </Routes>
   )
 }

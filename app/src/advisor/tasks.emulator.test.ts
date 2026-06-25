@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { initializeTestEnvironment, type RulesTestEnvironment } from '@firebase/rules-unit-testing'
-import { addTask, listTasksForAdvisor } from './tasks'
+import { addTask, listTasksForAdvisor, updateTask } from './tasks'
 
 let testEnv: RulesTestEnvironment
 
@@ -46,5 +46,19 @@ describe('listTasksForAdvisor', () => {
     expect(tasks[0].text).toBe('לבדוק תלוש שכר')
     expect(tasks[0].requestUid).toBe('client1')
     expect(tasks[0].done).toBe(false)
+  })
+})
+
+describe('updateTask', () => {
+  it('marks a task done and records notes', async () => {
+    const advisorDb = testEnv.authenticatedContext('advisor1', { role: 'advisor' }).firestore()
+    await addTask(advisorDb, 'advisor1', null, 'לבדוק תלוש שכר')
+    const [created] = await listTasksForAdvisor(advisorDb, 'advisor1')
+
+    await updateTask(advisorDb, created.id, { done: true, notes: 'דיברתי עם הלקוח' })
+
+    const [updated] = await listTasksForAdvisor(advisorDb, 'advisor1')
+    expect(updated.done).toBe(true)
+    expect(updated.notes).toBe('דיברתי עם הלקוח')
   })
 })

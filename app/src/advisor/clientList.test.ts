@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clientsForAdvisor, nextActionDate, sortClientsForAdvisor } from './clientList'
+import { clientsForAdvisor, nextActionDate, searchClients, sortClientsForAdvisor } from './clientList'
 import type { MortgageRequest } from './types'
 
 function request(overrides: Partial<MortgageRequest> = {}): MortgageRequest {
@@ -8,11 +8,13 @@ function request(overrides: Partial<MortgageRequest> = {}): MortgageRequest {
     assignedAdvisorUid: 'advisor1',
     createdAt: '2026-01-01T00:00:00.000Z',
     personal: [],
-    financial: { loanPurpose: '', propertyValue: '', equity: '' },
+    financial: { loanPurpose: '', propertySource: '', propertyValue: '', equity: '', minPay: '', maxPayDesired: '' },
+    additionalIncome: [],
     loans: [],
     mixes: [],
     documents: [],
     approvalStatus: 'בבדיקה',
+    archived: false,
     ...overrides,
   }
 }
@@ -77,5 +79,32 @@ describe('sortClientsForAdvisor', () => {
     })
 
     expect(sortClientsForAdvisor([noAction, hasAction, olderNoAction])).toEqual([hasAction, olderNoAction, noAction])
+  })
+})
+
+describe('searchClients', () => {
+  const dana = request({
+    uid: 'client-dana',
+    personal: [{ first: 'דנה', last: 'כהן', idNumber: '123456782', birth: '1990-01-01', income: 1000, isPropertyOwner: true }],
+  })
+  const yoni = request({
+    uid: 'client-yoni',
+    personal: [{ first: 'יוני', last: 'לוי', idNumber: '987654321', birth: '1990-01-01', income: 1000, isPropertyOwner: true }],
+  })
+
+  it('returns every client when the query is empty', () => {
+    expect(searchClients([dana, yoni], '')).toEqual([dana, yoni])
+  })
+
+  it('matches by partial first or last name, case/whitespace insensitive', () => {
+    expect(searchClients([dana, yoni], '  כהן ')).toEqual([dana])
+  })
+
+  it('matches by partial ID number', () => {
+    expect(searchClients([dana, yoni], '9876')).toEqual([yoni])
+  })
+
+  it('returns nothing when no client matches', () => {
+    expect(searchClients([dana, yoni], 'שגיא')).toEqual([])
   })
 })

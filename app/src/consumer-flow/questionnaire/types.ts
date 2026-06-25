@@ -40,6 +40,12 @@ export interface Borrower {
   income: number | ''
   /** בעל הנכס — story #10. NEW. Non-owners count 50% of net income. */
   isPropertyOwner: boolean
+  /**
+   * תעודת זהות — optional since the consumer questionnaire (#4) doesn't
+   * collect it yet; the advisor screen (#8) can fill it in. Optional keeps
+   * this a non-breaking addition to a type shared with #4's merged code.
+   */
+  idNumber?: string
 }
 
 /** הכנסה נוספת — story #12. NEW. */

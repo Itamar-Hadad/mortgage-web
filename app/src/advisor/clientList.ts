@@ -12,6 +12,19 @@ export function clientsForAdvisor(requests: MortgageRequest[], advisorUid: strin
   return requests.filter((request) => request.assignedAdvisorUid === advisorUid)
 }
 
+export function searchClients(requests: MortgageRequest[], query: string): MortgageRequest[] {
+  const q = query.trim().toLowerCase()
+  if (q === '') return requests
+  return requests.filter((request) =>
+    request.personal.some(
+      (borrower) =>
+        borrower.first.toLowerCase().includes(q) ||
+        borrower.last.toLowerCase().includes(q) ||
+        (borrower.idNumber ?? '').toLowerCase().includes(q),
+    ),
+  )
+}
+
 export function sortClientsForAdvisor(requests: MortgageRequest[]): MortgageRequest[] {
   return [...requests].sort((a, b) => {
     const dateA = nextActionDate(a)
