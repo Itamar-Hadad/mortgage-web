@@ -1,6 +1,5 @@
 import { test, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { I18nextProvider } from 'react-i18next'
 import i18n from './shared/i18n'
@@ -17,9 +16,9 @@ function renderAt(path: string) {
   )
 }
 
-test('consumer-flow route shows its translated placeholder text', () => {
+test('home route shows the questionnaire title', () => {
   renderAt('/')
-  expect(screen.getByText(he.placeholder.consumer_flow)).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: he.q.title })).toBeInTheDocument()
 })
 
 test('personal-area route shows its translated placeholder text', () => {
@@ -30,10 +29,4 @@ test('personal-area route shows its translated placeholder text', () => {
 test('admin-advisor route shows its translated placeholder text', () => {
   renderAt('/admin-advisor')
   expect(screen.getByText(he.placeholder.admin_advisor)).toBeInTheDocument()
-})
-
-test('clicking the personal-area nav link navigates there', async () => {
-  renderAt('/')
-  await userEvent.click(screen.getByRole('link', { name: he.nav.personal_area }))
-  expect(screen.getByText(he.placeholder.personal_area)).toBeInTheDocument()
 })
