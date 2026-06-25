@@ -20,6 +20,7 @@ yarn-error.log*
 functions/lib/
 firebase-debug.log
 firebase-debug.*.log
+firestore-debug.log
 ui-debug.log
 *.tsbuildinfo
 

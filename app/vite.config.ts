@@ -9,6 +9,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    // *.emulator.test.ts needs a live Firestore Emulator — run via `npm run test:firestore`, not the default `npm test`.
+    exclude: ['**/node_modules/**', '**/*.emulator.test.ts'],
     // shared/firebase.ts calls getAuth() at import time, which throws
     // auth/invalid-api-key on an empty key even when no network call is made —
     // these are dummy values, never sent to a real Firebase project.

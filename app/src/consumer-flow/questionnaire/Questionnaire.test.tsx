@@ -2,6 +2,7 @@ import { describe, test, expect, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { I18nextProvider } from 'react-i18next'
+import { MemoryRouter } from 'react-router-dom'
 import i18n from '../../shared/i18n'
 import he from '../../locales/he.json'
 import { Questionnaire } from './Questionnaire'
@@ -10,7 +11,9 @@ import { DRAFT_STORAGE_KEY } from './types'
 function renderQ() {
   return render(
     <I18nextProvider i18n={i18n}>
-      <Questionnaire />
+      <MemoryRouter>
+        <Questionnaire />
+      </MemoryRouter>
     </I18nextProvider>,
   )
 }
@@ -52,7 +55,7 @@ describe('Questionnaire wizard', () => {
     expect(stored.loanPurpose).toBe('לכל מטרה')
   })
 
-  test('reaching the end shows the done screen', async () => {
+  test('reaching the end shows the results page', async () => {
     const user = userEvent.setup()
     renderQ()
 
@@ -82,6 +85,7 @@ describe('Questionnaire wizard', () => {
     await user.type(screen.getByLabelText(`${he.q.payment_range.max} (₪)`), '6000')
     await user.click(screen.getByRole('button', { name: he.q.finish }))
 
-    expect(screen.getByRole('heading', { name: he.q.done_title })).toBeInTheDocument()
+    // hands off to ResultsPage (issue #6) — its own calc-loading/results states are covered by ResultsPage.test.tsx
+    expect(screen.getByRole('heading', { name: he.results.title })).toBeInTheDocument()
   })
 })
