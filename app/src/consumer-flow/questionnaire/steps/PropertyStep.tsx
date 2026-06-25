@@ -2,18 +2,18 @@ import { useTranslation } from 'react-i18next'
 import type { LoanPurpose, PropertySource } from '../types'
 import type { StepProps } from './StepProps'
 
-const LOAN_PURPOSES: { value: LoanPurpose; icon: string }[] = [
-  { value: 'נכס יחיד',   icon: 'home' },
-  { value: 'נכס נוסף',   icon: 'apartment' },
-  { value: 'לכל מטרה',  icon: 'sync_alt' },
-  { value: 'שיפור דיור', icon: 'upgrade' },
+const LOAN_PURPOSES: { value: LoanPurpose; icon: string; labelKey: string }[] = [
+  { value: 'נכס יחיד',   icon: 'home',              labelKey: 'q.loan_purpose_options.single' },
+  { value: 'נכס נוסף',   icon: 'apartment',         labelKey: 'q.loan_purpose_options.additional' },
+  { value: 'לכל מטרה',  icon: 'sync_alt',           labelKey: 'q.loan_purpose_options.any' },
+  { value: 'שיפור דיור', icon: 'upgrade',            labelKey: 'q.loan_purpose_options.improvement' },
 ]
 
-const PROPERTY_SOURCES: { value: PropertySource; icon: string }[] = [
-  { value: 'קבלן',          icon: 'construction' },
-  { value: 'יד 2',           icon: 'handshake' },
-  { value: 'מחיר למשתכן', icon: 'volunteer_activism' },
-  { value: 'בנייה עצמית',  icon: 'architecture' },
+const PROPERTY_SOURCES: { value: PropertySource; icon: string; labelKey: string }[] = [
+  { value: 'קבלן',          icon: 'construction',       labelKey: 'q.property_source_options.contractor' },
+  { value: 'יד 2',           icon: 'handshake',          labelKey: 'q.property_source_options.second_hand' },
+  { value: 'מחיר למשתכן', icon: 'volunteer_activism',  labelKey: 'q.property_source_options.subsidized' },
+  { value: 'בנייה עצמית',  icon: 'architecture',        labelKey: 'q.property_source_options.self_build' },
 ]
 
 function Icon({ name, filled = false }: { name: string; filled?: boolean }) {
@@ -32,13 +32,14 @@ function OptionGrid<T extends string>({
   value,
   onChange,
 }: {
-  options: { value: T; icon: string }[]
+  options: { value: T; icon: string; labelKey: string }[]
   value: T | ''
   onChange: (v: T) => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="grid grid-cols-2 gap-4">
-      {options.map(({ value: opt, icon }) => {
+      {options.map(({ value: opt, icon, labelKey }) => {
         const active = value === opt
         return (
           <button
@@ -59,7 +60,7 @@ function OptionGrid<T extends string>({
               className="font-bold text-base leading-snug"
               style={{ color: 'var(--color-on-surface)', fontFamily: "'Assistant', sans-serif" }}
             >
-              {opt}
+              {t(labelKey)}
             </span>
           </button>
         )

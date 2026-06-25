@@ -45,7 +45,7 @@ function Icon({
 export function Questionnaire() {
   const { t } = useTranslation()
   const { draft, update, clear } = useDraft()
-  const [step, setStep] = useState(0)
+  const step = draft.currentStep
   const [done, setDone] = useState(false)
   const [showError, setShowError] = useState(false)
 
@@ -57,12 +57,12 @@ export function Questionnaire() {
   function goNext() {
     if (!validity.valid) { setShowError(true); return }
     setShowError(false)
-    if (isLast) { setDone(true) } else { setStep((s) => s + 1) }
+    if (isLast) { setDone(true) } else { update({ currentStep: step + 1 }) }
   }
 
   function goBack() {
     setShowError(false)
-    setStep((s) => Math.max(0, s - 1))
+    update({ currentStep: Math.max(0, step - 1) })
   }
 
   if (done) {
@@ -85,7 +85,7 @@ export function Questionnaire() {
             <p className="mb-8" style={{ color: 'var(--color-on-surface-variant)' }}>{t('q.done_body')}</p>
             <button
               type="button"
-              onClick={() => { clear(); setStep(0); setDone(false) }}
+              onClick={() => { clear(); setDone(false) }}
               className="rounded-full font-bold py-3 px-8 transition-all hover:brightness-110 active:scale-95"
               style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
             >

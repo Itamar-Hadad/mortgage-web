@@ -127,6 +127,8 @@ export interface QuestionnaireDraft {
    * fills it. Persisted as-is to `requests/{uid}.mixes` on registration (#4/#5).
    */
   mixes: ProposedMix[]
+  /** שלב נוכחי בוויזארד (0-based). נשמר ב-localStorage כדי לאפשר המשך מאותו שלב. */
+  currentStep: number
 }
 
 export function emptyBorrower(): Borrower {
@@ -146,5 +148,6 @@ export function emptyDraft(): QuestionnaireDraft {
     minPay: '',
     maxPayDesired: '',
     mixes: [],
+    currentStep: 0,
   }
 }
