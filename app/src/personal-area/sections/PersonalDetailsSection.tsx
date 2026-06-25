@@ -14,7 +14,7 @@ const MARITAL_OPTIONS = ['רווק/ה', 'נשוי/אה', 'גרוש/ה', 'אלמ�
 
 interface Props {
   draft: QuestionnaireDraft
-  onComplete: () => void
+  onComplete: (borrowers: QuestionnaireDraft['borrowers']) => void
 }
 
 export function PersonalDetailsSection({ draft, onComplete }: Props) {
@@ -37,7 +37,16 @@ export function PersonalDetailsSection({ draft, onComplete }: Props) {
 
   function handleSave() {
     if (!allComplete) { setShowError(true); return }
-    onComplete()
+    // Map local form state back to QuestionnaireDraft['borrowers'] shape
+    const updated: QuestionnaireDraft['borrowers'] = borrowers.map((b, idx) => ({
+      ...draft.borrowers[idx],   // preserve any existing fields (idNumber, isPropertyOwner…)
+      first: b.first,
+      last: b.last,
+      birth: b.birth,
+      income: b.income === '' ? '' : Number(b.income),
+      isPropertyOwner: draft.borrowers[idx]?.isPropertyOwner ?? true,
+    }))
+    onComplete(updated)
   }
 
   return (

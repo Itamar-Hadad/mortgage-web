@@ -3,12 +3,17 @@ import {
   signInWithPhoneNumber,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  GoogleAuthProvider,
   getAdditionalUserInfo,
   type ConfirmationResult,
   type UserCredential,
 } from 'firebase/auth'
 import { httpsCallable } from 'firebase/functions'
 import { auth, functions } from '../../shared/firebase'
+
+const googleProvider = new GoogleAuthProvider()
 
 // ARCHITECTURE.md §11: phone OTP (Firebase Phone Auth) is primary, email+password
 // is the alternative. Both produce a real Firebase Auth uid — never Anonymous Auth
@@ -38,6 +43,14 @@ export function signUpWithEmail(email: string, password: string): Promise<UserCr
 
 export function signInWithEmail(email: string, password: string): Promise<UserCredential> {
   return signInWithEmailAndPassword(auth, email, password)
+}
+
+export function signInWithGoogle(): Promise<UserCredential> {
+  return signInWithPopup(auth, googleProvider)
+}
+
+export function signOutUser(): Promise<void> {
+  return signOut(auth)
 }
 
 // `getAdditionalUserInfo(credential).isNewUser` is how we tell a brand-new signup

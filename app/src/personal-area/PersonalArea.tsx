@@ -7,6 +7,8 @@ import { CredentialsSection } from './sections/CredentialsSection'
 import { DocumentsSection } from './sections/DocumentsSection'
 import { PaymentSection } from './sections/PaymentSection'
 import { MessagesSection } from './sections/MessagesSection'
+import { Navigate } from 'react-router-dom'
+import { auth } from '../shared/firebase'
 
 export function PersonalArea() {
   const {
@@ -17,7 +19,20 @@ export function PersonalArea() {
     signatureLoading, signatureError,
     isSectionUnlocked,
     draft,
+    loadingDraft,
   } = usePersonalArea()
+
+  if (!auth.currentUser) {
+    return <Navigate to="/sign-in" replace />
+  }
+
+  if (loadingDraft) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-background)' }}>
+        <span className="material-symbols-outlined text-5xl animate-spin" style={{ color: 'var(--color-primary)' }}>progress_activity</span>
+      </div>
+    )
+  }
 
   if (!track) {
     return <TrackSelector onSelect={selectTrack} />

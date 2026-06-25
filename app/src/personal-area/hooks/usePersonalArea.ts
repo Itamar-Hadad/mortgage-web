@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react'
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { useState, useCallback, useEffect } from 'react'
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db, auth } from '../../shared/firebase'
 import { readDraft } from '../../consumer-flow/questionnaire/draftStorage'
 import type { QuestionnaireDraft } from '../../consumer-flow/questionnaire/types'
@@ -13,7 +13,31 @@ function isBorrowerComplete(b: QuestionnaireDraft['borrowers'][0]): boolean {
   return !!(b.first && b.last && b.birth && b.income !== '')
 }
 
+/** Map Firestore requests/{uid} doc back to QuestionnaireDraft shape */
+function requestToLocalDraft(data: Record<string, unknown>): Partial<QuestionnaireDraft> {
+  const financial = (data.financial as Record<string, unknown> | undefined) ?? {}
+  const pv = financial.propertyValue
+  const eq = financial.equity
+  const mp = financial.minPay
+  const mpd = financial.maxPayDesired
+  return {
+    borrowers: (data.personal as QuestionnaireDraft['borrowers']) ?? [],
+    propertyValue: (typeof pv === 'number' ? pv : pv === '' ? '' : Number(pv) || ''),
+    equity:        (typeof eq === 'number' ? eq : eq === '' ? '' : Number(eq) || ''),
+    minPay:        (typeof mp === 'number' ? mp : mp === '' ? '' : Number(mp) || ''),
+    maxPayDesired: (typeof mpd === 'number' ? mpd : mpd === '' ? '' : Number(mpd) || ''),
+    loanPurpose:   (data.loanPurpose as QuestionnaireDraft['loanPurpose']) ?? '',
+    propertySource: (data.propertySource as QuestionnaireDraft['propertySource']) ?? '',
+    additionalIncome: (data.additionalIncome as QuestionnaireDraft['additionalIncome']) ?? [],
+    loans: (data.loans as QuestionnaireDraft['loans']) ?? [],
+    mixes: (data.mixes as QuestionnaireDraft['mixes']) ?? [],
+    currentStep: (data.questionnaireStep as number) ?? 0,
+  }
+}
+
 export function usePersonalArea() {
+  const uid = auth.currentUser?.uid ?? ''
+
   const [track, setTrackState] = useState<Track | null>(
     () => (localStorage.getItem(TRACK_KEY) as Track | null)
   )
@@ -26,18 +50,53 @@ export function usePersonalArea() {
   const [signatureLoading, setSignatureLoading] = useState(false)
   const [signatureError, setSignatureError] = useState('')
 
-  const uid = auth.currentUser?.uid ?? ''
-  const draft = readDraft()
+  // The working draft — populated from Firestore on mount, falls back to localStorage
+  const [draft, setDraft] = useState<QuestionnaireDraft>(() => readDraft())
+  const [loadingDraft, setLoadingDraft] = useState(true)
+
+  useEffect(() => {
+    if (!uid) { setLoadingDraft(false); return }
+    getDoc(doc(db, 'requests', uid))
+      .then((snap) => {
+        if (snap.exists()) {
+          const partial = requestToLocalDraft(snap.data() as Record<string, unknown>)
+          setDraft((prev) => ({ ...prev, ...partial }))
+          // Mark personal as done if data exists and is complete
+          const borrowers = (partial.borrowers ?? []) as QuestionnaireDraft['borrowers']
+          if (borrowers.length > 0 && borrowers.every(isBorrowerComplete)) {
+            setPersonalDone(true)
+          }
+        }
+      })
+      .catch(() => { /* network error — stay on localStorage draft */ })
+      .finally(() => setLoadingDraft(false))
+  }, [uid])
 
   const selectTrack = useCallback((t: Track) => {
     localStorage.setItem(TRACK_KEY, t)
     setTrackState(t)
   }, [])
 
-  const completePersonal = useCallback(() => {
+  // Saves updated borrowers to Firestore and advances to the next section
+  const completePersonal = useCallback(async (updatedBorrowers: QuestionnaireDraft['borrowers']) => {
+    setDraft((prev) => ({ ...prev, borrowers: updatedBorrowers }))
+    if (uid) {
+      try {
+        const ref = doc(db, 'requests', uid)
+        const snap = await getDoc(ref)
+        if (snap.exists()) {
+          await updateDoc(ref, { personal: updatedBorrowers })
+        } else {
+          // Edge case: doc not yet created (e.g. Google sign-in without draft)
+          await setDoc(ref, { personal: updatedBorrowers, createdAt: serverTimestamp() }, { merge: true })
+        }
+      } catch {
+        // Non-fatal — local state is already updated, Firestore will sync on next load
+      }
+    }
     setPersonalDone(true)
     setActiveSection('mortgage')
-  }, [])
+  }, [uid])
 
   const completeMortgage = useCallback(() => {
     setMortgageDone(true)
@@ -60,7 +119,7 @@ export function usePersonalArea() {
     } finally {
       setSignatureLoading(false)
     }
-  }, [uid, track])
+  }, [uid])
 
   const completeDocuments = useCallback(() => {
     setDocumentsDone(true)
@@ -92,6 +151,7 @@ export function usePersonalArea() {
     signatureLoading, signatureError,
     isSectionUnlocked,
     draft,
+    loadingDraft,
     borrowersComplete,
   }
 }

@@ -17,7 +17,6 @@ const LOAN_PURPOSES: { value: LoanPurpose; labelKey: string }[] = [
   { value: 'נכס יחיד', labelKey: 'q.loan_purpose_options.single' },
   { value: 'נכס נוסף', labelKey: 'q.loan_purpose_options.additional' },
   { value: 'לכל מטרה', labelKey: 'q.loan_purpose_options.any' },
-  { value: 'שיפור דיור', labelKey: 'q.loan_purpose_options.improvement' },
 ]
 
 const PROPERTY_SOURCES: { value: PropertySource; labelKey: string }[] = [
