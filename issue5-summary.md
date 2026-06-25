@@ -71,6 +71,22 @@ functions/: npm install · tsc · vitest run (1/1 ✅)
 - **חוקי Firestore (issue #7)** — לא נגעתי, כפי שמצוין ב-"הערת אינטגרציה" של issue5.md (לא חוסם).
 - **Cloud Functions דורש תוכנית Blaze** בפרויקט Firebase האמיתי (לא Spark/free) — אם זה עדיין לא מוגדר בפרויקט, deploy של functions/ ייכשל עד שמשדרגים.
 
+### ⚠️ עיצוב מחדש של SignIn/SignUp — לא נבדק שהקוד לא נשבר
+
+בנוסף לעבודה שמתועדת מעלה, עיצבתי מחדש את `SignInPage.tsx` ו-`SignUpPage.tsx` כדי שיתאימו ל-design system החדש שהגיע מ-`origin/main` (Tailwind, `index.css`, `shared/AppLayout.tsx` — header/footer/glass-panel/blobs משותפים):
+
+- `app/src/index.css` — הוחלף במלואו בגרסה מ-`main` (משתני צבע/פונט, `.ss-input`, `.ss-label`, `.glass-panel`, `.bg-blob` וכו').
+- `app/vite.config.ts`, `app/package.json` — נוספה תלות `@tailwindcss/vite` + `tailwindcss`.
+- `app/src/shared/AppLayout.tsx` (חדש) — `AppHeader`, `AppFooter`, `Icon`, `AuthPageShell`.
+- `SignInPage.tsx`, `SignUpPage.tsx` — שוכתבו ויזואלית (class-ים, מבנה DOM) אך ה-`id`/`label`/`role`/טקסטים (מפתחות i18n) נשארו זהים בכוונה כדי שהטסטים הקיימים (`SignInPage.test.tsx`, `SignUpPage.test.tsx`) ימשיכו לעבוד בלי שינוי.
+
+**לא הרצתי בפועל לא `npm install`, לא `npm run test`, ולא `npm run build`/`tsc -b` על השינויים האלה** — `npm install` נכשל בסביבה הנוכחית עם `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (כשל אימות תעודת SSL ברשת, כנראה proxy/CA פנימי שלא מותקן ב-Node), ולא היה אפשר להתקין את `@tailwindcss/vite` כדי לטעון בכלל את `vite.config.ts`.
+
+**המשמעות**: יש להניח שהשינויים האלה **לא מאומתים** — לא ידוע אם `vitest run`, `tsc -b`, או `npm run build` עוברים איתם. לפני push/merge, מי שממשיך את זה צריך:
+1. לפתור את שגיאת ה-SSL (למשל `npm config set cafile <path-to-corporate-ca>`, או להריץ מרשת/מכונה בלי MITM proxy), ואז להריץ `npm install`.
+2. להריץ `npm run test` ו-`npm run build` בתוך `app/` ולתקן כל שגיאה שתתגלה (חשד עיקרי: ייבוא/שמות class לא תקינים ב-`AppLayout.tsx`/`SignInPage.tsx`/`SignUpPage.tsx`, או קונפליקט גרסאות Tailwind).
+3. אם משהו שבור — **לתקן לפני שמדווחים שהמשימה הזו גמורה**, לא רק לדלג עליו.
+
 ## איך להעביר את הקוד לחבר לצוות
 
 המאגר מחובר ל-`origin` (github.com/Itamar-Hadad/mortgage-web), והענף הנוכחי `track-b/5-registration` עדיין לא נדחף (push) ל-remote. הדרך הפשוטה ביותר:
