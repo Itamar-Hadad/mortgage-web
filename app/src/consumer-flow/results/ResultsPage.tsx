@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { useCalcMixes } from './useCalcMixes'
 import { Speedometer } from './Speedometer'
 import { MixDetailChart } from './MixDetailChart'
-import type { QuestionnaireDraft } from '../questionnaire/types'
+import type { QuestionnaireDraft, ProposedMix } from '../questionnaire/types'
+import { writeDraft } from '../questionnaire/draftStorage'
 
 function fmt(n: number) {
   return Math.round(n).toLocaleString('he-IL')
@@ -33,6 +34,11 @@ export function ResultsPage({ draft, onRestart }: Props) {
   const { results, status, error } = useCalcMixes(draft)
   const [openDetail, setOpenDetail] = useState<string | null>(null)
   const [showCta, setShowCta] = useState(false)
+
+  function selectMix(mix: ProposedMix) {
+    writeDraft({ ...draft, mixes: [mix] })
+    setShowCta(true)
+  }
 
   const loanAmount = Number(draft.propertyValue || 0) - Number(draft.equity || 0)
 
@@ -121,7 +127,7 @@ export function ResultsPage({ draft, onRestart }: Props) {
                   {/* Actions */}
                   <div className="flex items-center gap-3 px-5 py-4 border-t" style={{ borderColor: 'rgba(188,201,204,0.3)' }}>
                     <button
-                      onClick={() => setShowCta(true)}
+                      onClick={() => selectMix(mix)}
                       className="flex-1 rounded-full font-bold py-2.5 text-sm transition-all hover:brightness-110 active:scale-95"
                       style={{ background: 'var(--color-primary-container)', color: 'var(--color-on-primary-container)' }}>
                       {t('results.btn_select')}
