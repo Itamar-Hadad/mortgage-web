@@ -8,6 +8,7 @@ import { BorrowersStep } from './steps/BorrowersStep'
 import { AdditionalIncomeStep } from './steps/AdditionalIncomeStep'
 import { LoansStep } from './steps/LoansStep'
 import { PaymentRangeStep } from './steps/PaymentRangeStep'
+import { ResultsPage } from '../results/ResultsPage'
 import type { StepProps } from './steps/StepProps'
 
 const STEPS: Array<(props: StepProps) => React.ReactElement> = [
@@ -68,34 +69,10 @@ export function Questionnaire() {
 
   if (done) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-background)' }}>
-        <AppHeader />
-        <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
-          <div className="bg-blob" style={{ top: '-15%', right: '-10%' }} />
-          <div className="bg-blob-2" style={{ bottom: '-10%', left: '-10%', animationDelay: '-5s', animationDuration: '35s' }} />
-        </div>
-        <main className="relative flex-1 flex flex-col items-center justify-center px-4 pt-28 pb-12" style={{ zIndex: 10 }}>
-          <div className="glass-panel w-full max-w-lg rounded-xl p-10 text-center">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-              style={{ background: 'rgba(112,234,255,0.2)' }}>
-              <Icon name="check_circle" filled className="text-5xl" style={{ color: 'var(--color-primary)' } as React.CSSProperties} />
-            </div>
-            <h1 className="text-3xl font-bold mb-3" style={{ fontFamily: 'var(--font-headline)', color: 'var(--color-on-surface)' }}>
-              {t('q.done_title')}
-            </h1>
-            <p className="mb-8" style={{ color: 'var(--color-on-surface-variant)' }}>{t('q.done_body')}</p>
-            <button
-              type="button"
-              onClick={() => { clear(); setDone(false) }}
-              className="rounded-full font-bold py-3 px-8 transition-all hover:brightness-110 active:scale-95"
-              style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
-            >
-              {t('q.restart')}
-            </button>
-          </div>
-        </main>
-        <AppFooter />
-      </div>
+      <ResultsPage
+        draft={draft}
+        onRestart={() => { clear(); setDone(false) }}
+      />
     )
   }
 
