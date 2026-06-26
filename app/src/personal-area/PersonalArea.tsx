@@ -7,6 +7,9 @@ import { CredentialsSection } from './sections/CredentialsSection'
 import { DocumentsSection } from './sections/DocumentsSection'
 import { PaymentSection } from './sections/PaymentSection'
 import { MessagesSection } from './sections/MessagesSection'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { ExplainerChat } from '../consumer-flow/explainer/ExplainerChat'
 
 export function PersonalArea() {
   const {
@@ -19,6 +22,9 @@ export function PersonalArea() {
     draft,
   } = usePersonalArea()
 
+  const [explainerOpen, setExplainerOpen] = useState(false)
+  const { t } = useTranslation()
+
   if (!track) {
     return <TrackSelector onSelect={selectTrack} />
   }
@@ -26,54 +32,69 @@ export function PersonalArea() {
   const userName = draft.borrowers[0]?.first || undefined
 
   return (
-    <PersonalAreaLayout
-      track={track}
-      activeSection={activeSection}
-      isSectionUnlocked={isSectionUnlocked}
-      onSelectSection={setActiveSection}
-      userName={userName}
-    >
-      {activeSection === 'personal' && (
-        <PersonalDetailsSection
-          draft={draft}
-          onComplete={completePersonal}
-        />
-      )}
+    <>
+      <PersonalAreaLayout
+        track={track}
+        activeSection={activeSection}
+        isSectionUnlocked={isSectionUnlocked}
+        onSelectSection={setActiveSection}
+        userName={userName}
+      >
+        {activeSection === 'personal' && (
+          <PersonalDetailsSection
+            draft={draft}
+            onComplete={completePersonal}
+          />
+        )}
 
-      {activeSection === 'mortgage' && personalDone && (
-        <MortgageDataSection
-          draft={draft}
-          onComplete={completeMortgage}
-        />
-      )}
+        {activeSection === 'mortgage' && personalDone && (
+          <MortgageDataSection
+            draft={draft}
+            onComplete={completeMortgage}
+          />
+        )}
 
-      {activeSection === 'credentials' && mortgageDone && (
-        <CredentialsSection
-          onSign={signCredentials}
-          loading={signatureLoading}
-          error={signatureError}
-          done={signatureDone}
-        />
-      )}
+        {activeSection === 'credentials' && mortgageDone && (
+          <CredentialsSection
+            onSign={signCredentials}
+            loading={signatureLoading}
+            error={signatureError}
+            done={signatureDone}
+          />
+        )}
 
-      {activeSection === 'documents' && signatureDone && (
-        <DocumentsSection
-          uid={uid}
-          draft={draft}
-          onComplete={completeDocuments}
-        />
-      )}
+        {activeSection === 'documents' && signatureDone && (
+          <DocumentsSection
+            uid={uid}
+            draft={draft}
+            onComplete={completeDocuments}
+          />
+        )}
 
-      {activeSection === 'payment' && documentsDone && track === 'רכישת תמהיל' && (
-        <PaymentSection
-          onComplete={completePayment}
-          done={paymentDone}
-        />
-      )}
+        {activeSection === 'payment' && documentsDone && track === 'רכישת תמהיל' && (
+          <PaymentSection
+            onComplete={completePayment}
+            done={paymentDone}
+          />
+        )}
 
-      {activeSection === 'messages' && (
-        <MessagesSection uid={uid} />
-      )}
-    </PersonalAreaLayout>
+        {activeSection === 'messages' && (
+          <MessagesSection uid={uid} />
+        )}
+      </PersonalAreaLayout>
+
+      <button
+        onClick={() => setExplainerOpen(true)}
+        className="fixed bottom-6 left-6 z-40 px-5 py-3 rounded-full text-white font-semibold text-sm shadow-lg hover:opacity-90 transition-opacity"
+        style={{ backgroundColor: '#006875', fontFamily: 'Assistant, sans-serif' }}
+      >
+        {t('explainer.button_label')}
+      </button>
+
+      <ExplainerChat
+        isOpen={explainerOpen}
+        onClose={() => setExplainerOpen(false)}
+      />
+    </>
   )
 }
