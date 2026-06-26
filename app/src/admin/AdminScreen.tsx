@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { collection, onSnapshot, query, where, doc, updateDoc } from 'firebase/firestore'
+import { db } from '../shared/firebase'
 import { PageShell } from '../shared/AppLayout'
 import { countRequestsByType } from './dashboard'
 import { clientsForAdvisor } from '../advisor/clientList'
@@ -756,12 +758,66 @@ function ConfigView() {
   )
 }
 
+// ── Rate-watcher alerts ───────────────────────────────────────────────────────
+
+interface AdminAlert {
+  id: string
+  message: string
+  source: string
+  timestamp?: { seconds: number }
+}
+
+function useAdminAlerts() {
+  const [alerts, setAlerts] = useState<AdminAlert[]>([])
+  useEffect(() => {
+    const q = query(collection(db, 'admin-alerts'), where('read', '==', false))
+    return onSnapshot(q, (snap) => {
+      setAlerts(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<AdminAlert, 'id'>) })))
+    })
+  }, [])
+  return alerts
+}
+
+async function dismissAlert(id: string) {
+  await updateDoc(doc(db, 'admin-alerts', id), { read: true })
+}
+
+function AlertBanner({ alerts }: { alerts: AdminAlert[] }) {
+  if (alerts.length === 0) return null
+  return (
+    <div className="mb-6 space-y-2">
+      {alerts.map((alert) => (
+        <div
+          key={alert.id}
+          className="flex items-start gap-3 rounded-xl px-4 py-3"
+          style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.4)' }}
+        >
+          <span className="text-lg mt-0.5">⚠️</span>
+          <div className="flex-1 text-sm" style={{ color: 'var(--color-on-surface)', direction: 'rtl' }}>
+            <span className="font-semibold text-xs opacity-60 block mb-0.5">{alert.source}</span>
+            {alert.message}
+          </div>
+          <button
+            type="button"
+            onClick={() => dismissAlert(alert.id)}
+            className="text-xs opacity-50 hover:opacity-100 mt-0.5 flex-shrink-0"
+            style={{ color: 'var(--color-on-surface)' }}
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── AdminScreen ───────────────────────────────────────────────────────────────
 
 export function AdminScreen() {
   const { t } = useTranslation()
   const [requests, setRequests] = useState<MortgageRequest[]>(seedRequests)
   const [view, setView] = useState<AdminView>('dashboard')
+  const alerts = useAdminAlerts()
 
   function handleAssign(requestUid: string, advisorUid: string | null) {
     setRequests((prev) => prev.map((r) => (r.uid === requestUid ? { ...r, assignedAdvisorUid: advisorUid } : r)))
@@ -783,6 +839,8 @@ export function AdminScreen() {
         >
           {t('admin.title')}
         </h1>
+
+        <AlertBanner alerts={alerts} />
 
         <div className="flex gap-2 mb-6 border-b" style={{ borderColor: 'rgba(188,201,204,0.4)' }}>
           {VIEWS.map(({ key, label }) => (
