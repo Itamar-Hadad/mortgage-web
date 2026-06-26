@@ -6,10 +6,16 @@ import { I18nextProvider } from 'react-i18next'
 import i18n from '../../shared/i18n'
 
 const signInWithEmailMock = vi.fn()
+const getUserRoleMock = vi.fn()
 const navigateMock = vi.fn()
 
 vi.mock('./authService', () => ({
   signInWithEmail: (...args: unknown[]) => signInWithEmailMock(...args),
+  signInWithGoogle: vi.fn(),
+  isNewUser: vi.fn(),
+  claimConsumerRole: vi.fn(),
+  getUserRole: (...args: unknown[]) => getUserRoleMock(...args),
+  firebaseErrorMessage: () => i18n.t('sign_in.error_generic'),
 }))
 
 vi.mock('react-router-dom', async () => {
@@ -21,6 +27,7 @@ const { SignInPage } = await import('./SignInPage')
 
 beforeEach(() => {
   signInWithEmailMock.mockReset()
+  getUserRoleMock.mockReset().mockResolvedValue(null)
   navigateMock.mockReset()
 })
 

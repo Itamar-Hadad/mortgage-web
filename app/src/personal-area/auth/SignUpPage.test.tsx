@@ -17,8 +17,11 @@ vi.mock('./authService', () => ({
   sendPhoneOtp: vi.fn(),
   confirmPhoneOtp: vi.fn(),
   signUpWithEmail: (...args: unknown[]) => signUpWithEmailMock(...args),
+  signInWithGoogle: vi.fn(),
   isNewUser: (...args: unknown[]) => isNewUserMock(...args),
   claimConsumerRole: (...args: unknown[]) => claimConsumerRoleMock(...args),
+  firebaseErrorMessage: () => i18n.t('sign_up.error_generic'),
+  normaliseIsraeliPhone: (raw: string) => raw,
 }))
 
 vi.mock('./migrateDraftOnSignup', () => ({
@@ -74,7 +77,10 @@ test('new email signup migrates the draft, then claims the consumer role, then n
   expect(migrateOrder).toBeLessThan(claimOrder)
 })
 
-test('returning email user skips the role claim but still navigates', async () => {
+test('returning email user still re-claims the role (idempotent self-heal) and navigates', async () => {
+  // isNewUser only reflects whether the Auth account was just created — an
+  // earlier attempt may have created the account but been interrupted before
+  // claiming the role, so every retry must re-claim it regardless of this flag.
   const credential = { user: { uid: 'uid-returning', getIdToken: getIdTokenMock } }
   signUpWithEmailMock.mockResolvedValue(credential)
   isNewUserMock.mockReturnValue(false)
@@ -85,7 +91,7 @@ test('returning email user skips the role claim but still navigates', async () =
   await userEvent.type(screen.getByLabelText(i18n.t('sign_up.password_label')), 'super-secret')
   await userEvent.click(screen.getByRole('button', { name: i18n.t('sign_up.submit_email') }))
 
-  expect(claimConsumerRoleMock).not.toHaveBeenCalled()
+  expect(claimConsumerRoleMock).toHaveBeenCalledTimes(1)
   expect(migrateDraftOnSignupMock).toHaveBeenCalledWith('uid-returning', false)
   expect(navigateMock).toHaveBeenCalledWith('/personal-area')
 })
