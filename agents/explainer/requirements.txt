@@ -6,3 +6,4 @@ tantivy
 uvicorn
 requests
 google-cloud-firestore
+firebase-admin
