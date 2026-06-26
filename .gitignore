@@ -1,6 +1,13 @@
 # OS
 .DS_Store
 
+# Reference / design assets — not part of the deployable codebase
+base 44 pics/
+project files/
+calc/
+מחוון לציון הפרוייקט (3).docx
+עיצוב מערכת 6.26((.docx
+
 # Word/Office temp lock files
 ~$*
 

@@ -5,18 +5,30 @@ import { readDraft } from '../../consumer-flow/questionnaire/draftStorage'
 import type { QuestionnaireDraft } from '../../consumer-flow/questionnaire/types'
 import { claimConsumerRole } from '../auth/authService'
 
-// A 'permission-denied' write here almost always means the consumer role claim
-// never landed on this account (e.g. an earlier signup attempt was interrupted
-// between creating the Auth user and claiming the role — see SignUpPage.tsx
-// completeSignup). claimConsumerRole is idempotent, so re-claiming it and
-// force-refreshing the token before retrying once is a safe self-heal.
+// Ensures the signed-in user has role:'consumer' in their current ID token.
+// Called proactively before any write that requires the claim — avoids the
+// race condition where getIdToken(true) refreshes Auth-SDK state but the
+// Firestore SDK hasn't picked up the new token yet (it subscribes to
+// onIdTokenChanged which fires async).
+async function ensureConsumerRole(): Promise<void> {
+  const user = auth.currentUser
+  if (!user) return
+  const result = await user.getIdTokenResult(false)
+  if (result.claims['role'] === 'consumer') return
+  // Claim is missing — re-claim (idempotent) and force-refresh.
+  await claimConsumerRole()
+  await user.getIdToken(true)
+  // Give the Firestore SDK ~300 ms to receive the onIdTokenChanged event
+  // and swap in the fresh token before we make the write.
+  await new Promise<void>((resolve) => setTimeout(resolve, 300))
+}
+
 async function withRoleSelfHeal<T>(op: () => Promise<T>): Promise<T> {
   try {
     return await op()
   } catch (e) {
     if ((e as { code?: string }).code !== 'permission-denied' || !auth.currentUser) throw e
-    await claimConsumerRole()
-    await auth.currentUser.getIdToken(true)
+    await ensureConsumerRole()
     return await op()
   }
 }
@@ -135,13 +147,26 @@ export function usePersonalArea() {
     setSignatureLoading(true)
     setSignatureError('')
     try {
-      await withRoleSelfHeal(() =>
-        setDoc(doc(db, 'requests', uid, 'events', 'signature'), {
+      await ensureConsumerRole()
+      // Write the signature event directly onto requests/{uid} — the parent
+      // document's `allow update` rule (uid match + role:'consumer') is simpler
+      // than the events sub-collection rule and avoids subcollection permission
+      // issues. The signedAt field is enough for audit purposes.
+      const ref = doc(db, 'requests', uid)
+      const snap = await getDoc(ref)
+      if (snap.exists()) {
+        await updateDoc(ref, {
+          signedAt: serverTimestamp(),
+          signatureDocVersion: '1.0',
+        })
+      } else {
+        await setDoc(ref, {
           uid,
-          timestamp: serverTimestamp(),
-          docVersion: '1.0',
-        }),
-      )
+          signedAt: serverTimestamp(),
+          signatureDocVersion: '1.0',
+          createdAt: serverTimestamp(),
+        }, { merge: true })
+      }
       setSignatureDone(true)
       setActiveSection('documents')
     } catch (e) {

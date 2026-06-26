@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDocuments } from '../hooks/useDocuments'
 import type { QuestionnaireDraft } from '../../consumer-flow/questionnaire/types'
@@ -132,8 +132,6 @@ interface DocCardProps {
 }
 
 function DocCard({ type, doc, isUploading, error, onUpload, t }: DocCardProps) {
-  const inputId = `file-upload-${type.replace(/\s+/g, '-')}`
-
   const statusColor = doc?.status === 'אושר'
     ? '#16a34a'
     : doc?.status === 'נדחה'
@@ -184,26 +182,25 @@ function DocCard({ type, doc, isUploading, error, onUpload, t }: DocCardProps) {
         <p className="text-xs mb-3 font-semibold" style={{ color: 'var(--color-error)' }}>{error}</p>
       )}
 
-      {/* Upload button — show if not uploaded yet, or rejected (re-upload) */}
+      {/* Upload button — label wraps a display:none input, the most
+          universally compatible way to trigger a file picker on all browsers. */}
       {(!doc || doc.status === 'נדחה') && !isUploading && (
         <label
-          htmlFor={inputId}
-          className="inline-flex items-center gap-1 rounded-full font-bold py-2 px-6 text-sm transition-all hover:brightness-110 active:scale-95 cursor-pointer"
+          className="inline-flex items-center gap-1 rounded-full font-bold py-2 px-6 text-sm cursor-pointer select-none"
           style={{ background: doc?.status === 'נדחה' ? 'var(--color-error-container)' : 'var(--color-primary-container)', color: doc?.status === 'נדחה' ? 'var(--color-on-error-container)' : 'var(--color-on-primary-container)' }}
         >
-          <Icon name="upload" className="text-sm ml-1" />
-          {doc?.status === 'נדחה' ? t('documents.reupload') : t('documents.upload')}
           <input
-            id={inputId}
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
-            className="sr-only"
+            style={{ display: 'none' }}
             onChange={(e) => {
               const file = e.target.files?.[0]
               if (file) onUpload(file)
               e.target.value = ''
             }}
           />
+          <Icon name="upload" className="text-sm ml-1" />
+          {doc?.status === 'נדחה' ? t('documents.reupload') : t('documents.upload')}
         </label>
       )}
     </div>
