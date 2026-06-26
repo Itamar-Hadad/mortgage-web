@@ -1,3 +1,6 @@
+import { useNavigate } from 'react-router-dom'
+import { signOutUser } from './auth/authService'
+
 import type { SectionKey, Track } from './hooks/usePersonalArea'
 
 function Icon({ name, filled = false, className = '', style }: { name: string; filled?: boolean; className?: string; style?: React.CSSProperties }) {
@@ -35,6 +38,7 @@ interface Props {
 }
 
 export function PersonalAreaLayout({ track, activeSection, isSectionUnlocked, onSelectSection, userName, children }: Props) {
+  const navigate = useNavigate()
   const visibleItems = SIDEBAR_ITEMS.filter(
     (item) => item.visibleForTracks === 'all' || item.visibleForTracks.includes(track)
   )
@@ -44,28 +48,58 @@ export function PersonalAreaLayout({ track, activeSection, isSectionUnlocked, on
       {/* Header */}
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-10 py-3"
         style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(188,201,204,0.3)' }}>
-        <span className="text-xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-headline)', color: 'var(--color-primary)' }}>
-          SimpleSave
-        </span>
-        {userName && (
+        <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}>
+          <img src="/logo.png" alt="SimpleSave" style={{ height: 34, width: 'auto' }} />
+        </button>
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center"
+            <div className="w-9 h-9 rounded-full flex items-center justify-center"
               style={{ background: 'var(--color-primary-container)' }}>
-              <Icon name="person" className="text-base" style={{ color: 'var(--color-primary)' }} />
+              <Icon name="person" filled className="text-base" style={{ color: 'var(--color-primary)' }} />
             </div>
-            <span className="text-sm font-semibold hidden md:block" style={{ color: 'var(--color-on-surface)' }}>
-              שלום, {userName}
-            </span>
+            <div className="hidden md:flex flex-col leading-tight">
+              {userName ? (
+                <>
+                  <span className="text-xs" style={{ color: 'var(--color-on-surface-variant)' }}>שלום 👋</span>
+                  <span className="text-sm font-bold" style={{ color: 'var(--color-on-surface)' }}>{userName}</span>
+                </>
+              ) : (
+                <span className="text-sm font-semibold" style={{ color: 'var(--color-on-surface)' }}>האזור האישי</span>
+              )}
+            </div>
           </div>
-        )}
+          <button
+            onClick={async () => { await signOutUser(); navigate('/sign-in') }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold border transition-colors hover:bg-red-50"
+            style={{ borderColor: 'var(--color-outline-variant)', color: 'var(--color-error)' }}
+            title="התנתקות"
+          >
+            <Icon name="logout" className="text-base" />
+            <span className="hidden md:inline">התנתקות</span>
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-1 pt-16">
         {/* Sidebar */}
         <aside className="w-64 flex-shrink-0 hidden md:flex flex-col border-l"
           style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', borderColor: 'rgba(188,201,204,0.3)' }}>
-          <div className="p-6 border-b" style={{ borderColor: 'rgba(188,201,204,0.3)' }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-secondary)' }}>
+          <div className="p-5 border-b" style={{ borderColor: 'rgba(188,201,204,0.3)', background: 'linear-gradient(135deg, rgba(0,104,117,0.06) 0%, transparent 100%)' }}>
+            {userName && (
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'var(--color-primary)', boxShadow: '0 4px 12px -4px rgba(0,104,117,0.4)' }}>
+                  <span className="text-base font-bold" style={{ color: '#fff' }}>
+                    {userName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs" style={{ color: 'var(--color-on-surface-variant)' }}>שלום 👋</p>
+                  <p className="text-sm font-bold" style={{ color: 'var(--color-on-surface)' }}>{userName}</p>
+                </div>
+              </div>
+            )}
+            <p className="text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: 'var(--color-secondary)' }}>
               אזור אישי
             </p>
             <p className="text-sm font-semibold" style={{ color: 'var(--color-on-surface)' }}>{track}</p>
@@ -104,7 +138,7 @@ export function PersonalAreaLayout({ track, activeSection, isSectionUnlocked, on
             <div className="bg-blob" style={{ top: '-15%', right: '-10%' }} />
             <div className="bg-blob-2" style={{ bottom: '-10%', left: '-10%', animationDelay: '-5s' }} />
           </div>
-          <div className="relative" style={{ zIndex: 10 }}>
+          <div className="relative animate-fade-up" style={{ zIndex: 10 }}>
             {children}
           </div>
         </main>

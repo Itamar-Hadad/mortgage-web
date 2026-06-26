@@ -11,6 +11,9 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ExplainerChat } from '../consumer-flow/explainer/ExplainerChat'
 import { Icon } from '../shared/AppLayout'
+import { Navigate } from 'react-router-dom'
+import { auth } from '../shared/firebase'
+import { CompletionPopup } from './CompletionPopup'
 
 export function PersonalArea() {
   const {
@@ -21,19 +24,41 @@ export function PersonalArea() {
     signatureLoading, signatureError,
     isSectionUnlocked,
     draft,
+    loadingDraft,
+    showCompletionPopup,
+    dismissCompletionPopup,
   } = usePersonalArea()
 
   const [explainerOpen, setExplainerOpen] = useState(false)
   const { t } = useTranslation()
 
+  if (!auth.currentUser) {
+    return <Navigate to="/sign-in" replace />
+  }
+
+  if (loadingDraft) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-background)' }}>
+        <span className="material-symbols-outlined text-5xl animate-spin" style={{ color: 'var(--color-primary)' }}>progress_activity</span>
+      </div>
+    )
+  }
+
   if (!track) {
     return <TrackSelector onSelect={selectTrack} />
   }
 
-  const userName = draft.borrowers[0]?.first || undefined
+  // Name cascade: filled form → Google displayName → email prefix
+  const currentUser = auth.currentUser
+  const userName =
+    draft.borrowers[0]?.first ||
+    currentUser?.displayName?.split(' ')[0] ||
+    currentUser?.email?.split('@')[0] ||
+    undefined
 
   return (
     <>
+      {showCompletionPopup && <CompletionPopup onClose={dismissCompletionPopup} />}
       <PersonalAreaLayout
         track={track}
         activeSection={activeSection}

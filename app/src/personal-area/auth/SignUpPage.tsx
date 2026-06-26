@@ -1,14 +1,17 @@
 import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import type { ConfirmationResult, UserCredential } from 'firebase/auth'
 import {
   createRecaptchaVerifier,
   sendPhoneOtp,
   confirmPhoneOtp,
   signUpWithEmail,
+  signInWithGoogle,
   isNewUser,
   claimConsumerRole,
+  firebaseErrorMessage,
+  normaliseIsraeliPhone,
 } from './authService'
 import { migrateDraftOnSignup } from './migrateDraftOnSignup'
 import { AuthPageShell, Icon } from '../../shared/AppLayout'
@@ -40,8 +43,12 @@ export function SignUpPage() {
     // a cancelled/interrupted signup must never leave a permanently-privileged
     // Auth user with no backing record (issue #5 AC).
     if (newUser) {
-      await claimConsumerRole()
-      await credential.user.getIdToken(true)
+      try {
+        await claimConsumerRole()
+        await credential.user.getIdToken(true) // force-refresh token so role claim is included
+      } catch {
+        // role claim is best-effort — signup still completes without it
+      }
     }
     navigate('/personal-area')
   }
@@ -51,11 +58,12 @@ export function SignUpPage() {
     setError(null)
     setSubmitting(true)
     try {
+      const e164 = normaliseIsraeliPhone(phoneNumber)
       const verifier = createRecaptchaVerifier(RECAPTCHA_CONTAINER_ID)
-      confirmationRef.current = await sendPhoneOtp(phoneNumber, verifier)
+      confirmationRef.current = await sendPhoneOtp(e164, verifier)
       setPhoneStep('enter-code')
-    } catch {
-      setError(t('sign_up.error_generic'))
+    } catch (err) {
+      setError(firebaseErrorMessage(err))
     } finally {
       setSubmitting(false)
     }
@@ -69,8 +77,8 @@ export function SignUpPage() {
     try {
       const credential = await confirmPhoneOtp(confirmationRef.current, code)
       await completeSignup(credential)
-    } catch {
-      setError(t('sign_up.error_generic'))
+    } catch (err) {
+      setError(firebaseErrorMessage(err))
     } finally {
       setSubmitting(false)
     }
@@ -83,8 +91,8 @@ export function SignUpPage() {
     try {
       const credential = await signUpWithEmail(email, password)
       await completeSignup(credential)
-    } catch {
-      setError(t('sign_up.error_generic'))
+    } catch (err) {
+      setError(firebaseErrorMessage(err))
     } finally {
       setSubmitting(false)
     }
@@ -99,6 +107,40 @@ export function SignUpPage() {
         <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-headline)', color: 'var(--color-on-surface)' }}>
           {t('sign_up.title')}
         </h1>
+      </div>
+
+      <button
+        type="button"
+        disabled={submitting}
+        onClick={async () => {
+          setError(null)
+          setSubmitting(true)
+          try {
+            const credential = await signInWithGoogle()
+            await completeSignup(credential)
+          } catch (err) {
+            setError(firebaseErrorMessage(err))
+          } finally {
+            setSubmitting(false)
+          }
+        }}
+        className="w-full flex items-center justify-center gap-3 font-semibold py-3 rounded-full border mb-4 transition-colors hover:bg-gray-50 disabled:opacity-50"
+        style={{ borderColor: 'var(--color-outline-variant)', color: 'var(--color-on-surface)', background: 'white' }}
+      >
+        <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          <path fill="none" d="M0 0h48v48H0z"/>
+        </svg>
+        {t('sign_up.google')}
+      </button>
+
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex-1 h-px" style={{ background: 'var(--color-outline-variant)' }} />
+        <span className="text-xs" style={{ color: 'var(--color-on-surface-variant)' }}>{t('sign_up.or')}</span>
+        <div className="flex-1 h-px" style={{ background: 'var(--color-outline-variant)' }} />
       </div>
 
       <div role="tablist" className="flex gap-2 mb-6 p-1 rounded-full" style={{ background: 'var(--color-surface-container)' }}>
@@ -138,10 +180,14 @@ export function SignUpPage() {
               id="phone-number"
               type="tel"
               className="ss-input"
+              placeholder="05X-XXXXXXX"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               required
             />
+            <p className="text-xs mt-1" style={{ color: 'var(--color-on-surface-variant)' }}>
+              ניתן להזין בפורמט ישראלי (052...) — המרה ל-E.164 אוטומטית
+            </p>
           </div>
           <div id={RECAPTCHA_CONTAINER_ID} />
           <button
@@ -225,6 +271,13 @@ export function SignUpPage() {
           <span className="text-sm font-semibold">{error}</span>
         </div>
       )}
+
+      <p className="mt-6 text-center text-sm" style={{ color: 'var(--color-on-surface-variant)' }}>
+        {t('sign_up.already_have_account')}{' '}
+        <Link to="/sign-in" className="font-semibold underline" style={{ color: 'var(--color-primary)' }}>
+          {t('sign_in.title')}
+        </Link>
+      </p>
     </AuthPageShell>
   )
 }

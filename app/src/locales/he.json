@@ -59,14 +59,20 @@
     "email_label": "מייל",
     "password_label": "סיסמה",
     "submit_email": "הרשמה",
-    "error_generic": "ההרשמה נכשלה. נסו שוב."
+    "error_generic": "ההרשמה נכשלה. נסו שוב.",
+    "already_have_account": "כבר יש לך חשבון?",
+    "google": "הרשמה עם Google",
+    "or": "או"
   },
   "sign_in": {
     "title": "כניסה",
     "email_label": "מייל",
     "password_label": "סיסמה",
     "submit": "כניסה",
-    "error_generic": "הכניסה נכשלה. נסו שוב."
+    "error_generic": "הכניסה נכשלה. נסו שוב.",
+    "no_account": "אין לך חשבון?",
+    "google": "כניסה עם Google",
+    "or": "או"
   },
   "footer": {
     "tagline": "SimpleSave — פלטפורמת השוואת משכנתאות",

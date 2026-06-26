@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 
 export function Icon({
   name,
@@ -23,16 +24,19 @@ export function Icon({
 }
 
 export function AppHeader() {
+  const navigate = useNavigate()
   return (
     <header
       className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-10 py-3"
       style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(188,201,204,0.3)' }}
     >
-      <div className="flex items-center gap-2">
-        <span className="text-xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-headline)', color: 'var(--color-primary)' }}>
-          SimpleSave
-        </span>
-      </div>
+      <button
+        onClick={() => navigate('/')}
+        className="flex items-center gap-2"
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+      >
+        <img src="/logo.png" alt="SimpleSave" style={{ height: 34, width: 'auto' }} />
+      </button>
       <Icon name="help_outline" className="text-2xl cursor-pointer transition-colors" style={{ color: 'var(--color-secondary)' } as React.CSSProperties} />
     </header>
   )

@@ -11,6 +11,8 @@ build/
 .env
 .env.local
 .env.*.local
+.secret.local
+**/.secret.local
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
