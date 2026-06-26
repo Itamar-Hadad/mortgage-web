@@ -10,9 +10,10 @@ import { MessagesSection } from './sections/MessagesSection'
 import { Navigate } from 'react-router-dom'
 import { auth } from '../shared/firebase'
 import { CompletionPopup } from './CompletionPopup'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ExplainerChat } from '../consumer-flow/explainer/ExplainerChat'
+import type { User } from 'firebase/auth'
 
 export function PersonalArea() {
   const {
@@ -31,7 +32,20 @@ export function PersonalArea() {
   const [explainerOpen, setExplainerOpen] = useState(false)
   const { t } = useTranslation()
 
-  if (!auth.currentUser) {
+  // Wait for Firebase to restore the session before redirecting
+  const [authUser, setAuthUser] = useState<User | null | undefined>(undefined)
+  useEffect(() => auth.onAuthStateChanged(setAuthUser), [])
+
+  if (authUser === undefined) {
+    // Firebase hasn't resolved auth state yet — show spinner
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-background)' }}>
+        <span className="material-symbols-outlined text-5xl animate-spin" style={{ color: 'var(--color-primary)' }}>progress_activity</span>
+      </div>
+    )
+  }
+
+  if (!authUser) {
     return <Navigate to="/sign-in" replace />
   }
 
