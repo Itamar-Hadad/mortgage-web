@@ -81,6 +81,12 @@ service cloud.firestore {
         && resource.data.advisorUid == request.auth.uid;
     }
 
+    // Rate-watcher agent writes here; admin screen reads and dismisses.
+    match /admin-alerts/{alertId} {
+      allow read, update: if request.auth != null
+        && request.auth.token.role == 'admin';
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
