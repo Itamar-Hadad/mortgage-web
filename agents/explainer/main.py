@@ -1,9 +1,6 @@
 import json
 import os
 import uvicorn
-from contextvars import ContextVar
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
 
 from agno.agent import Agent
 from agno.models.anthropic import Claude
@@ -11,7 +8,8 @@ from agno.knowledge import Knowledge
 from agno.vectordb.lancedb import LanceDb, SearchType
 from agno.knowledge.embedder.voyageai import VoyageAIEmbedder
 from agno.tools import tool
-from agno.app.agentui.serve import AgentOS
+from agno.run import RunContext
+from agno.os.app import AgentOS
 
 import firebase_admin
 from firebase_admin import credentials, firestore as firebase_firestore
@@ -23,33 +21,13 @@ _cred = credentials.Certificate(
 firebase_admin.initialize_app(_cred)
 _db = firebase_firestore.client()
 
-# --- ContextVar: uid מגיע מה-request body, מוזרק ע"י middleware ---
-_current_uid: ContextVar[str] = ContextVar("uid", default="")
-
-
-# --- Middleware: חולץ uid מה-body לפני שהסוכן רץ ---
-class UidMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        if request.method == "POST" and request.url.path == "/runs":
-            try:
-                body = await request.body()
-                data = json.loads(body)
-                uid = data.get("uid", "")
-                token = _current_uid.set(uid)
-                response = await call_next(request)
-                _current_uid.reset(token)
-                return response
-            except Exception:
-                pass
-        return await call_next(request)
-
 
 # --- Tool ---
 @tool()
-def get_user_mortgage_data() -> str:
+def get_user_mortgage_data(run_context: RunContext) -> str:
     """שלוף את נתוני המשכנתא של המשתמש — תמהילים, תשלום חודשי ראשון, סך תשלומים, ריבית.
     קרא לפונקציה זו כשהמשתמש שואל על הנתונים האישיים שלו."""
-    uid = _current_uid.get()
+    uid = run_context.user_id if run_context else None
     if not uid:
         return "לא ניתן לאמת את זהות המשתמש."
 
@@ -136,7 +114,6 @@ agent_os = AgentOS(
 )
 
 app = agent_os.get_app()
-app.add_middleware(UidMiddleware)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=7777)

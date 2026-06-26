@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { auth } from '../../shared/firebase'
 
 const AGENT_URL = import.meta.env.VITE_EXPLAINER_URL ?? 'http://localhost:7777'
@@ -9,11 +9,27 @@ export interface ChatMessage {
   text: string
 }
 
+async function fetchAgentId(): Promise<string | null> {
+  try {
+    const res = await fetch(`${AGENT_URL}/agents`)
+    if (!res.ok) return null
+    const agents: { id: string }[] = await res.json()
+    return agents[0]?.id ?? null
+  } catch {
+    return null
+  }
+}
+
 export function useExplainerChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const agentIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    fetchAgentId().then(id => { agentIdRef.current = id })
+  }, [])
 
   async function send() {
     const text = input.trim()
@@ -23,6 +39,12 @@ export function useExplainerChat() {
       return
     }
     const uid = auth.currentUser.uid
+    const agentId = agentIdRef.current ?? (await fetchAgentId())
+    if (!agentId) {
+      setError('error')
+      return
+    }
+    agentIdRef.current = agentId
 
     setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'user', text }])
     setInput('')
@@ -30,10 +52,14 @@ export function useExplainerChat() {
     setError(null)
 
     try {
-      const res = await fetch(`${AGENT_URL}/runs`, {
+      const form = new FormData()
+      form.append('message', text)
+      form.append('user_id', uid)
+      form.append('stream', 'false')
+
+      const res = await fetch(`${AGENT_URL}/agents/${agentId}/runs`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, uid }),
+        body: form,
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
