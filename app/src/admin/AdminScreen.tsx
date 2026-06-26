@@ -771,9 +771,11 @@ export function AdminScreen() {
   }, [])
 
   useEffect(() => {
-    return onSnapshot(collection(db, 'advisors'), (snap) => {
-      setAdvisors(snap.docs.map((d) => d.data() as Advisor))
-    })
+    return onSnapshot(
+      collection(db, 'advisors'),
+      (snap) => { setAdvisors(snap.docs.map((d) => d.data() as Advisor)) },
+      (err) => { console.error('advisors onSnapshot error:', err.code, err.message) },
+    )
   }, [])
 
   function handleAssign(requestUid: string, advisorUid: string | null) {
