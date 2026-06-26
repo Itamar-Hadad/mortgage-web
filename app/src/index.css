@@ -178,3 +178,102 @@ body {
   color: var(--color-on-surface-variant);
   margin-bottom: 0.35rem;
 }
+
+/* ─── Entrance animations ─── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,104,117,0.3); }
+  50%       { box-shadow: 0 0 0 12px rgba(0,104,117,0); }
+}
+
+.animate-fade-up  { animation: fade-up 0.5s cubic-bezier(0.23, 1, 0.32, 1) both; }
+.animate-fade-in  { animation: fade-in 0.4s ease both; }
+.animate-scale-in { animation: scale-in 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+.animate-slide-right { animation: slide-in-right 0.4s cubic-bezier(0.23, 1, 0.32, 1) both; }
+.animate-float    { animation: float 3s ease-in-out infinite; }
+.animate-glow     { animation: glow-pulse 2s ease-in-out infinite; }
+
+/* Stagger delays for lists */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* ─── Enhanced glass panel ─── */
+.glass-panel-deep {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(112, 234, 255, 0.25);
+  box-shadow: 0 20px 60px -16px rgba(45, 98, 139, 0.12), 0 4px 16px -4px rgba(0,104,117,0.06);
+}
+
+/* ─── CTA button shimmer ─── */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s linear infinite;
+  pointer-events: none;
+}
+
+/* ─── Card hover lift ─── */
+.card-hover {
+  transition: transform 0.25s cubic-bezier(0.23, 1, 0.32, 1),
+              box-shadow 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 48px -12px rgba(0,104,117,0.15);
+}
+
+/* ─── Gradient text ─── */
+.gradient-text {
+  background: linear-gradient(135deg, #006875 0%, #2d628b 60%, #70eaff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Section divider ─── */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,104,117,0.15), transparent);
+  margin: 2rem 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up, .animate-fade-in, .animate-scale-in,
+  .animate-slide-right, .animate-float, .animate-glow,
+  .btn-shimmer::after { animation: none; }
+  .card-hover:hover { transform: none; }
+}

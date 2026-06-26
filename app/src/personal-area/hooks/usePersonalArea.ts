@@ -49,6 +49,7 @@ export function usePersonalArea() {
   const [paymentDone, setPaymentDone] = useState(false)
   const [signatureLoading, setSignatureLoading] = useState(false)
   const [signatureError, setSignatureError] = useState('')
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false)
 
   // The working draft — populated from Firestore on mount, falls back to localStorage
   const [draft, setDraft] = useState<QuestionnaireDraft>(() => readDraft())
@@ -121,14 +122,31 @@ export function usePersonalArea() {
     }
   }, [uid])
 
+  async function markJourneyComplete() {
+    if (uid) {
+      try {
+        await updateDoc(doc(db, 'requests', uid), { status: 'pending_advisor' })
+      } catch {
+        // best-effort
+      }
+    }
+    setShowCompletionPopup(true)
+  }
+
   const completeDocuments = useCallback(() => {
     setDocumentsDone(true)
-    if (track === 'רכישת תמהיל') setActiveSection('payment')
-  }, [track])
+    if (track === 'רכישת תמהיל') {
+      setActiveSection('payment')
+    } else {
+      // For non-payment tracks, completing documents finishes the journey
+      markJourneyComplete()
+    }
+  }, [track, uid])
 
   const completePayment = useCallback(() => {
     setPaymentDone(true)
-  }, [])
+    markJourneyComplete()
+  }, [uid])
 
   const isSectionUnlocked = useCallback((section: SectionKey): boolean => {
     switch (section) {
@@ -153,5 +171,7 @@ export function usePersonalArea() {
     draft,
     loadingDraft,
     borrowersComplete,
+    showCompletionPopup,
+    dismissCompletionPopup: () => setShowCompletionPopup(false),
   }
 }

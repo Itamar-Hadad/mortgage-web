@@ -9,6 +9,7 @@ import { PaymentSection } from './sections/PaymentSection'
 import { MessagesSection } from './sections/MessagesSection'
 import { Navigate } from 'react-router-dom'
 import { auth } from '../shared/firebase'
+import { CompletionPopup } from './CompletionPopup'
 
 export function PersonalArea() {
   const {
@@ -20,6 +21,8 @@ export function PersonalArea() {
     isSectionUnlocked,
     draft,
     loadingDraft,
+    showCompletionPopup,
+    dismissCompletionPopup,
   } = usePersonalArea()
 
   if (!auth.currentUser) {
@@ -41,6 +44,8 @@ export function PersonalArea() {
   const userName = draft.borrowers[0]?.first || undefined
 
   return (
+    <>
+    {showCompletionPopup && <CompletionPopup onClose={dismissCompletionPopup} />}
     <PersonalAreaLayout
       track={track}
       activeSection={activeSection}
@@ -90,5 +95,6 @@ export function PersonalArea() {
         <MessagesSection uid={uid} />
       )}
     </PersonalAreaLayout>
+    </>
   )
 }

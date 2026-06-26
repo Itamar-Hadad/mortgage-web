@@ -118,7 +118,7 @@ export function PersonalAreaLayout({ track, activeSection, isSectionUnlocked, on
             <div className="bg-blob" style={{ top: '-15%', right: '-10%' }} />
             <div className="bg-blob-2" style={{ bottom: '-10%', left: '-10%', animationDelay: '-5s' }} />
           </div>
-          <div className="relative" style={{ zIndex: 10 }}>
+          <div className="relative animate-fade-up" style={{ zIndex: 10 }}>
             {children}
           </div>
         </main>
