@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="app/public/logo.png" width="110" />
+  <img src="app/public/logo.png" width="330" />
 </p>
 
 <h1 align="center">🏠 SimpleSave</h1>
