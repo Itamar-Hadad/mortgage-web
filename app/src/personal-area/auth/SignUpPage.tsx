@@ -43,8 +43,12 @@ export function SignUpPage() {
     // a cancelled/interrupted signup must never leave a permanently-privileged
     // Auth user with no backing record (issue #5 AC).
     if (newUser) {
-      await claimConsumerRole()
-      await credential.user.getIdToken(true)
+      try {
+        await claimConsumerRole()
+        await credential.user.getIdToken(true) // force-refresh token so role claim is included
+      } catch {
+        // role claim is best-effort — signup still completes without it
+      }
     }
     navigate('/personal-area')
   }

@@ -55,25 +55,43 @@
 |---|---|---|
 | `/` | `HomePage` | ציבורי |
 | `/questionnaire` | `Questionnaire` | ציבורי (טיוטה ב-localStorage) |
-| `/sign-in` | `SignInPage` | ציבורי |
+| `/sign-in` | `SignInPage` | ציבורי (לקוחות) |
 | `/sign-up` | `SignUpPage` | ציבורי |
-| `/personal-area` | `PersonalArea` | `role: consumer` (auth guard — redirect `/sign-in`) |
-| `/advisor` | `AdvisorScreen` | `role: advisor` (guard עתידי — כרגע seed data) |
-| `/admin` | `AdminScreen` | `role: admin` (guard עתידי — כרגע seed data) |
+| `/staff-sign-in` | `StaffSignInPage` | ציבורי (צוות בלבד — בחירת תפקיד + כניסה) |
+| `/personal-area` | `PersonalArea` | `auth.currentUser` — redirect `/sign-in` |
+| `/advisor` | `AdvisorScreen` | `RequireRole role="advisor"` — redirect `/staff-sign-in` |
+| `/admin` | `AdminScreen` | `RequireRole role="admin"` — redirect `/staff-sign-in` |
 
-**קריטי: `SignInPage` מפנה לפי role לאחר כניסה.**
-לאחר כל כניסה (email או Google) קוראים ל-`getUserRole()` → `getIdTokenResult()` ומפנים:
-- `role:'admin'` → `/admin`
-- `role:'advisor'` → `/advisor`
-- ללא role / `role:'consumer'` → `/personal-area`
+**ניתוב לאחר כניסה:**
+- `SignInPage` (לקוחות): לאחר כניסה → `/personal-area`
+- `StaffSignInPage` (צוות): בחירת תפקיד → כניסה → `/admin` או `/advisor`
+- בשניהם: אם קיים Firebase custom claim, הוא גובר על הבחירה ב-UI
 
-זה מאפשר ל**מנהל וליועץ להיכנס דרך אותו `SignInPage`** — הניתוב הוא אוטומטי לפי ה-claim בטוקן. אין צורך בנתיב כניסה נפרד לצוות.
+**Guard מימוש (`RequireRole`):**
+`app/src/shared/RequireRole.tsx` — קורא `getIdTokenResult()`, מציג spinner בבדיקה, מנתב ל-`/staff-sign-in` כשנכשל. מנהל (`admin`) מורשה גם לנתיב `/advisor`.
 
 **דף הבית מכיל:**
-- Hero section: כרטיסי 3 שירותים (משכנתא חדשה → `/questionnaire`, מחזור / ביטוח → placeholder עם "בקרוב")
-- "כניסת צוות" בניווט (→ `/sign-in`)
+- Hero section עם בית SVG מונפש + כרטיסיות צפות (floating data-cards)
+- כרטיסי 3 שירותים (משכנתא חדשה → `/questionnaire`, מחזור / ביטוח → "בקרוב")
+- "כניסת צוות" בניווט → `/staff-sign-in`
 - Aware ל-auth state: מציג "האזור האישי שלי" כשמחובר, "כניסה/הרשמה" כשלא מחובר
-- סקציות: How-it-works, Stats (מונים אנימטיביים), Value props, בנקים, CTA
+- סקציות: How-it-works, Stats (מונים אנימטיביים), Testimonials, בנקים, CTA
+
+## 4ב. Firestore Security Rules — תיקון הרשמה
+
+**בעיה שנמצאה ותוקנה (סשן 4):**
+`migrateDraftOnSignup` כותב ל-`requests/{uid}` לפני ש-`claimConsumerRole` מגדיר `role:'consumer'`.
+החוקים המקוריים דרשו `role == 'consumer'` לכל write — כולל create — מה שחסם את הכתיבה הראשונה.
+
+**חוקים מעודכנים:**
+```
+allow create: if auth.uid == requestId  // ללא דרישת role — למשתמש חדש לפני הגדרת role
+allow read:   if auth.uid == requestId  // קריאה ללא role — לחלון שבין signup ל-token refresh
+allow update: if auth.uid == requestId && role == 'consumer'  // עדכונים — אחרי role
+```
+תת-קולקציה `events/{eventId}` (חתימות) נוספה לכללים במפורש.
+
+**`claimConsumerRole` ב-SignUpPage** עוטף ב-try/catch — אם נכשל, ה-signup לא נחסם.
 
 ## 5. מסכי מנהל ויועץ
 

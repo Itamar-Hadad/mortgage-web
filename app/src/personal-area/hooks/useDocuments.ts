@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { doc, onSnapshot, updateDoc, arrayUnion } from 'firebase/firestore'
+import { doc, onSnapshot } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { useTranslation } from 'react-i18next'
 import { db, functions } from '../../shared/firebase'
@@ -48,22 +48,14 @@ export function useDocuments(uid: string) {
     setErrors((prev) => ({ ...prev, [docType]: '' }))
     try {
       const fileBase64 = await toBase64(file)
-      const result = await uploadDocumentFn({
+      // The cloud function writes the document record to Firestore itself via
+      // admin SDK, so we don't need a separate client-side updateDoc here.
+      // onSnapshot below will pick up the change automatically.
+      await uploadDocumentFn({
         docType,
         fileBase64,
         fileName: file.name,
         mimeType: file.type,
-      })
-      // Optimistically update local state; onSnapshot will reconcile
-      const newDoc: RequestDocument = {
-        id: result.data.docId,
-        type: docType,
-        status: 'ממתין לבדיקה',
-        submittedAt: new Date().toISOString(),
-        fileUrl: result.data.fileUrl,
-      }
-      await updateDoc(doc(db, 'requests', uid), {
-        documents: arrayUnion(newDoc),
       })
     } catch (e) {
       setErrors((prev) => ({ ...prev, [docType]: (e as Error).message || t('documents.upload_error') }))

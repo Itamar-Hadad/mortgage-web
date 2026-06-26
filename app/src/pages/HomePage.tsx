@@ -328,7 +328,7 @@ export function HomePage() {
         <div className="home-nav-links">
           <a href="#how" className="home-nav-link">איך זה עובד</a>
           <a href="#about" className="home-nav-link">אודות</a>
-          <button onClick={() => navigate('/sign-in')} className="home-nav-link home-nav-staff-btn"
+          <button onClick={() => navigate('/staff-sign-in')} className="home-nav-link home-nav-staff-btn"
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
             <Icon name="admin_panel_settings" className="text-base" style={{ verticalAlign: 'middle', marginLeft: '0.3rem' }} />
             כניסת צוות
