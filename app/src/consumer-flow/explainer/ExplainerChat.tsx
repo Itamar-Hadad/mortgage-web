@@ -48,15 +48,15 @@ export function ExplainerChat({ isOpen, onClose }: Props) {
           <button
             onClick={onClose}
             className="text-white text-2xl leading-none hover:opacity-70 transition-opacity"
-            aria-label="סגור"
+            aria-label={t('explainer.close')}
           >
             ×
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          {messages.map((msg, i) => (
-            <ChatMessage key={i} message={msg} />
+          {messages.map((msg) => (
+            <ChatMessage key={msg.id} message={msg} />
           ))}
 
           {isTyping && (
@@ -105,7 +105,7 @@ export function ExplainerChat({ isOpen, onClose }: Props) {
               disabled={!input.trim() || isTyping}
               className="w-10 h-10 rounded-full flex items-center justify-center text-white disabled:opacity-40 transition-opacity"
               style={{ backgroundColor: '#006875' }}
-              aria-label="שלח"
+              aria-label={t('explainer.send')}
             >
               ➤
             </button>
