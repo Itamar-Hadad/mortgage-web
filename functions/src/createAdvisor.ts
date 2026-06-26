@@ -1,4 +1,4 @@
-import { getAuth } from 'firebase-admin/auth'
+import { getAuth, type UserRecord } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { onCall, HttpsError, type CallableRequest } from 'firebase-functions/v2/https'
 
@@ -23,7 +23,20 @@ export async function createAdvisor(request: CallableRequest): Promise<{ uid: st
     throw new HttpsError('invalid-argument', 'יש למלא שם פרטי, שם משפחה, אימייל וסיסמה.')
   }
 
-  const userRecord = await getAuth().createUser({ email, password })
+  let userRecord: UserRecord
+  try {
+    userRecord = await getAuth().createUser({ email, password })
+  } catch (err: unknown) {
+    const authErr = err as { code?: string; message?: string }
+    if (authErr.code === 'auth/email-already-exists') {
+      throw new HttpsError('already-exists', `כתובת האימייל ${email} כבר רשומה במערכת.`)
+    }
+    if (authErr.code === 'auth/invalid-password') {
+      throw new HttpsError('invalid-argument', 'הסיסמה חייבת להכיל לפחות 6 תווים.')
+    }
+    throw new HttpsError('internal', `שגיאה ביצירת משתמש: ${authErr.message ?? String(err)}`)
+  }
+
   await getAuth().setCustomUserClaims(userRecord.uid, { role: 'advisor' })
 
   await getFirestore().doc(`advisors/${userRecord.uid}`).set({
