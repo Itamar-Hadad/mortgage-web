@@ -1,0 +1,9 @@
+agno
+anthropic
+voyageai
+lancedb
+tantivy
+uvicorn
+requests
+google-cloud-firestore
+firebase-admin

@@ -221,10 +221,38 @@ allow update: if auth.uid == requestId && role == 'consumer'  // עדכונים 
 
 ## 14. סוכני AI (תוספת בידול — לא במסמך הלקוח המקורי, ADR-0006)
 
-שני פיצ'רים חדשים, **לא** מתוך `עיצוב מערכת 6.26((.docx` — בידול-מוצר שהצוות בחר ביזמתו כדי לבלוט מול מתחרים. שניהם בנויים ב-**Agno (Python)**, לא LangChain — ראו נימוק מלא ב-ADR-0006.
+שלושה סוכנים בנויים ב-**Agno (Python)**, לא LangChain — ראו נימוק מלא ב-ADR-0006. כולם ב-`agents/` בשורש הריפו.
 
-- **סוכן-קבלה**: אופציה חלופית לטופס המדורג של שאלון "משכנתא חדשה" (סעיף 3) — המשתמש בוחר טופס *או* סוכן, שניהם פעילים במקביל. הסוכן חייב לאסוף את **כל** השדות הנדרשים בדיוק כמו הטופס; שלמות-המילוי מנוהלת ע"י tool דטרמיניסטי בקוד (לא שיקול-דעת LLM), כך שכללי-החובה זהים לטופס ולא יכולים "להישחק" בפרומפט. הפלט נכתב לאותו מבנה `לווים`/`financial` ונשמר ב-localStorage ע"י הקליינט בדיוק כמו הטופס (ADR-0001) — לא ערוץ-נתונים נפרד.
-- **סוכן-הסבר** ("הסבר לי את המשכנתא שלי"): RAG על מילון המושגים (נספח א') + tool שקורא לאותו Cloud Function המוסתר של מנוע החישוב (סעיף 6) כדי להביא את הנתונים האמיתיים של המשתמש. מסביר רק מה שמעוגן בגלוסר+בנתונים האמיתיים — לא ידע כללי.
-- **Human-in-the-loop כאן ≠ `requires_confirmation` של Agno** (זה מיועד לפעולות-עם-תופעת-לוואי בתוך הסוכן, כמו שליחת מייל). השמירה בפועל קורית בקליינט, אז הפתרון הוא מסך recap/אישור ב-UI לפני שכל שדה שחולץ נחשב סופי.
-- **תוצאה ארכיטקטונית**: Cloud Functions בריפו ישתמשו בשני runtimes — Node/TS (ללא שינוי) ו-Python (שתי פונקציות הסוכנים בלבד). מכוון, לא לאחד runtime "כדי שיהיה אחיד".
-- **פתוח**: ספק embeddings ל-RAG (דוגמת הקורס משתמשת ב-OpenAI embedder גם כש-Claude הוא המודל) — להחליט אם להוסיף תלות ב-OpenAI key רק לשם זה, או embedder אחר שAgno תומך בו.
+### סוכן-הסבר (`agents/explainer/`) — **ממומש ופעיל**
+
+HTTP server (AgentOS, פורט 7777) שמגיב לשאלות משתמש על מושגי משכנתא ועל הנתונים האישיים שלו.
+
+**מימוש בפועל:**
+- מילון המושגים (`glossary.md`) נטען ישירות ל-system prompt — לא RAG/embeddings. הגלוסר קטן מספיק (60 שורות) שאין צורך בוקטור DB.
+- tool אחד: `get_user_mortgage_data(user_id)` — שולף `requests/{uid}` מ-Firestore ומחזיר תמהילים+נתונים פיננסיים.
+- agent id קבוע: `simplesave-explainer` (מונע שינוי ID בין הרצות).
+- ה-frontend מתקשר דרך `VITE_EXPLAINER_URL` (ברירת מחדל: `http://localhost:7777`).
+- `ExplainerChat.tsx` → `useExplainerChat.ts`: שולח `POST /agents/simplesave-explainer/runs` עם `user_id = auth.currentUser.uid`.
+- תשובות מרונדרות כ-Markdown ב-`ChatMessage.tsx` (react-markdown).
+
+**הרצה מקומית:** `python agents/explainer/main.py` — טוען `.env` מ-`app/.env` אוטומטית.
+
+**פתוח לפרודקשן:** פריסה ל-Cloud Run עם Application Default Credentials (ללא `service-account.json`).
+
+### סוכן-קבלה — **לא ממומש עדיין**
+
+אופציה חלופית לטופס השאלון — המשתמש בוחר טופס *או* סוכן. הפלט נכתב לאותו מבנה `לווים`/`financial` ונשמר ב-localStorage (ADR-0001). לא נבנה בסבב הנוכחי.
+
+### סוכן מעקב-ריביות (`agents/rate-watcher/`) — **ממומש ופעיל**
+
+סוכן חד-פעמי (לא שרת) שרץ כל 3 ימים ומשווה ריביות שוק מול הגדרות Firestore.
+
+**מימוש בפועל:**
+- tool 1: `fetch_market_rates()` — שולף CPI שנתי מ-CBS API (`api.cbs.gov.il`, id=120010, שדה `month[0].date[0].percentYear`). ריבית הפריים — BOI חסום לבקשות server-side; הסוכן מאמד לפי ידע training data ומציין זאת בבירור.
+- tool 2: `get_config_rates()` — קורא `config/generalRates` ו-`config/monthlyIndices` מ-Firestore.
+- tool 3: `notify_admin(message)` — כותב ל-`admin-alerts` ב-Firestore (קולקשיין שה-admin panel מאזין לו).
+- סף התראה: פער ≥ 0.1% בכל מדד.
+
+**הרצה מקומית:** `python agents/rate-watcher/main.py` — טוען `.env` מ-`app/.env` אוטומטית.
+
+**תוצאה ארכיטקטונית:** שני runtimes ב-Cloud Functions — Node/TS (מנוע חישוב + auth) ו-Python (סוכנים). מכוון, לא לאחד.
