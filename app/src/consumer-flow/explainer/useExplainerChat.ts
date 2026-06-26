@@ -4,6 +4,7 @@ import { auth } from '../../shared/firebase'
 const AGENT_URL = import.meta.env.VITE_EXPLAINER_URL ?? 'http://localhost:7777'
 
 export interface ChatMessage {
+  id: string
   role: 'user' | 'agent'
   text: string
 }
@@ -17,9 +18,13 @@ export function useExplainerChat() {
   async function send() {
     const text = input.trim()
     if (!text) return
-    const uid = auth.currentUser?.uid ?? 'anonymous'
+    if (!auth.currentUser) {
+      setError('error')
+      return
+    }
+    const uid = auth.currentUser.uid
 
-    setMessages(prev => [...prev, { role: 'user', text }])
+    setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'user', text }])
     setInput('')
     setIsTyping(true)
     setError(null)
@@ -33,8 +38,9 @@ export function useExplainerChat() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       const agentText: string = data?.content ?? data?.message ?? JSON.stringify(data)
-      setMessages(prev => [...prev, { role: 'agent', text: agentText }])
-    } catch {
+      setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'agent', text: agentText }])
+    } catch (err) {
+      console.error('[ExplainerChat] fetch error:', err)
       setError('error')
     } finally {
       setIsTyping(false)
