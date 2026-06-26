@@ -186,25 +186,34 @@ function DocCard({ type, doc, isUploading, error, onUpload, t }: DocCardProps) {
 
       {/* Upload button — show if not uploaded yet, or rejected (re-upload) */}
       {(!doc || doc.status === 'נדחה') && !isUploading && (
-        <label
-          htmlFor={inputId}
-          className="inline-flex items-center gap-1 rounded-full font-bold py-2 px-6 text-sm transition-all hover:brightness-110 active:scale-95 cursor-pointer"
-          style={{ background: doc?.status === 'נדחה' ? 'var(--color-error-container)' : 'var(--color-primary-container)', color: doc?.status === 'נדחה' ? 'var(--color-on-error-container)' : 'var(--color-on-primary-container)' }}
-        >
-          <Icon name="upload" className="text-sm ml-1" />
-          {doc?.status === 'נדחה' ? t('documents.reupload') : t('documents.upload')}
+        <div style={{ position: 'relative', display: 'inline-block' }}>
           <input
             id={inputId}
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
-            className="sr-only"
             onChange={(e) => {
               const file = e.target.files?.[0]
               if (file) onUpload(file)
               e.target.value = ''
             }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              opacity: 0,
+              width: '100%',
+              height: '100%',
+              cursor: 'pointer',
+              zIndex: 1,
+            }}
           />
-        </label>
+          <span
+            className="inline-flex items-center gap-1 rounded-full font-bold py-2 px-6 text-sm"
+            style={{ background: doc?.status === 'נדחה' ? 'var(--color-error-container)' : 'var(--color-primary-container)', color: doc?.status === 'נדחה' ? 'var(--color-on-error-container)' : 'var(--color-on-primary-container)' }}
+          >
+            <Icon name="upload" className="text-sm ml-1" />
+            {doc?.status === 'נדחה' ? t('documents.reupload') : t('documents.upload')}
+          </span>
+        </div>
       )}
     </div>
   )
