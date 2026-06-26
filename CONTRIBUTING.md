@@ -8,7 +8,7 @@
    ```
    git clone https://github.com/Itamar-Hadad/mortgage-web.git
    ```
-   הרצה מקומית של האפליקציה (`npm install` וכו') מתועדת ב-[app/README.md](app/README.md).
+   הרצה מקומית של האפליקציה (`npm install` וכו') מתועדת בסעיף "Run Locally" ב-[README.md](README.md).
 2. **לפני שמתחילים issue חדש — מסנכרנים `main`:**
    ```
    git checkout main && git pull origin main
