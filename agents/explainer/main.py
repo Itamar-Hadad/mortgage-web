@@ -12,7 +12,9 @@ from agno.run import RunContext
 from agno.os.app import AgentOS
 
 import firebase_admin
-from firebase_admin import credentials, firestore as firebase_firestore
+from firebase_admin import auth as firebase_auth, credentials, firestore as firebase_firestore
+from fastapi import Request
+from fastapi.responses import JSONResponse
 
 # --- Firebase Admin init ---
 _cred = credentials.Certificate(
@@ -114,6 +116,26 @@ agent_os = AgentOS(
 )
 
 app = agent_os.get_app()
+
+
+@app.middleware("http")
+async def require_firebase_auth(request: Request, call_next):
+    """Verify a real Firebase ID token on every request and set request.state.user_id
+    from it. AgentOS's own /agents/{id}/runs route (agno.os.routers.agents.router)
+    already prefers request.state.user_id over the client-supplied `user_id` form
+    field — this is what stops a caller from passing an arbitrary user_id and
+    reading someone else's mortgage data via get_user_mortgage_data."""
+    auth_header = request.headers.get("authorization", "")
+    token = auth_header[len("Bearer "):].strip() if auth_header.startswith("Bearer ") else None
+    if not token:
+        return JSONResponse(status_code=401, content={"detail": "Missing Authorization header"})
+    try:
+        decoded = firebase_auth.verify_id_token(token)
+    except Exception:
+        return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
+    request.state.user_id = decoded["uid"]
+    return await call_next(request)
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=7777)

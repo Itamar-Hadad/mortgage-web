@@ -9,9 +9,11 @@ export interface ChatMessage {
   text: string
 }
 
-async function fetchAgentId(): Promise<string | null> {
+async function fetchAgentId(idToken: string): Promise<string | null> {
   try {
-    const res = await fetch(`${AGENT_URL}/agents`)
+    const res = await fetch(`${AGENT_URL}/agents`, {
+      headers: { Authorization: `Bearer ${idToken}` },
+    })
     if (!res.ok) return null
     const agents: { id: string }[] = await res.json()
     return agents[0]?.id ?? null
@@ -28,7 +30,8 @@ export function useExplainerChat() {
   const agentIdRef = useRef<string | null>(null)
 
   useEffect(() => {
-    fetchAgentId().then(id => { agentIdRef.current = id })
+    if (!auth.currentUser) return
+    auth.currentUser.getIdToken().then(fetchAgentId).then(id => { agentIdRef.current = id })
   }, [])
 
   async function send() {
@@ -38,8 +41,8 @@ export function useExplainerChat() {
       setError('error')
       return
     }
-    const uid = auth.currentUser.uid
-    const agentId = agentIdRef.current ?? (await fetchAgentId())
+    const idToken = await auth.currentUser.getIdToken()
+    const agentId = agentIdRef.current ?? (await fetchAgentId(idToken))
     if (!agentId) {
       setError('error')
       return
@@ -54,11 +57,11 @@ export function useExplainerChat() {
     try {
       const form = new FormData()
       form.append('message', text)
-      form.append('user_id', uid)
       form.append('stream', 'false')
 
       const res = await fetch(`${AGENT_URL}/agents/${agentId}/runs`, {
         method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
         body: form,
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)

@@ -14,11 +14,13 @@ export function ChatMessage({ message }: Props) {
         className={[
           'max-w-[75%] px-4 py-3 text-sm leading-relaxed',
           'rounded-[18px]',
-          isUser
-            ? 'bg-white shadow-sm text-[#111c2c]'
-            : 'text-white',
+          isUser ? 'bg-white shadow-sm' : '',
         ].join(' ')}
-        style={isUser ? undefined : { backgroundColor: '#006875' }}
+        style={
+          isUser
+            ? { color: 'var(--color-on-surface)' }
+            : { background: 'var(--color-primary)', color: 'var(--color-on-primary)' }
+        }
       >
         {message.text}
       </div>

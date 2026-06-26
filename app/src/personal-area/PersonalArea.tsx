@@ -10,6 +10,7 @@ import { MessagesSection } from './sections/MessagesSection'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ExplainerChat } from '../consumer-flow/explainer/ExplainerChat'
+import { Icon } from '../shared/AppLayout'
 
 export function PersonalArea() {
   const {
@@ -85,9 +86,15 @@ export function PersonalArea() {
 
       <button
         onClick={() => setExplainerOpen(true)}
-        className="fixed bottom-6 left-6 z-40 px-5 py-3 rounded-full text-white font-semibold text-sm shadow-lg hover:opacity-90 transition-opacity"
-        style={{ backgroundColor: '#006875', fontFamily: 'Assistant, sans-serif' }}
+        className="fixed bottom-6 left-6 z-40 flex items-center gap-2 px-5 py-3 rounded-full font-semibold text-sm shadow-lg transition-all hover:brightness-110 active:scale-95"
+        style={{
+          background: 'var(--color-primary)',
+          color: 'var(--color-on-primary)',
+          fontFamily: 'var(--font-rounded)',
+          boxShadow: '0 8px 20px -6px rgba(0,104,117,0.35)',
+        }}
       >
+        <Icon name="chat" className="text-lg" />
         {t('explainer.button_label')}
       </button>
 

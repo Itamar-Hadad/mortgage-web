@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useExplainerChat } from './useExplainerChat'
 import { ChatMessage } from './ChatMessage'
+import { Icon } from '../../shared/AppLayout'
 
 interface Props {
   isOpen: boolean
@@ -35,22 +36,23 @@ export function ExplainerChat({ isOpen, onClose }: Props) {
       <div
         dir="rtl"
         className="relative flex flex-col w-full max-w-md h-full shadow-2xl"
-        style={{ backgroundColor: '#f0f3ff', fontFamily: 'Assistant, sans-serif' }}
+        style={{ background: 'var(--color-surface)', fontFamily: 'var(--font-rounded)' }}
         onClick={e => e.stopPropagation()}
       >
         <div
-          className="flex items-center justify-between px-5 py-4 border-b border-[#bcc9cc]"
-          style={{ backgroundColor: '#006875' }}
+          className="flex items-center justify-between px-5 py-4"
+          style={{ background: 'var(--color-primary)' }}
         >
-          <span className="text-white font-bold text-lg">
+          <span className="font-bold text-lg" style={{ color: 'var(--color-on-primary)', fontFamily: 'var(--font-headline)' }}>
             {t('explainer.drawer_title')}
           </span>
           <button
             onClick={onClose}
-            className="text-white text-2xl leading-none hover:opacity-70 transition-opacity"
+            className="hover:opacity-70 transition-opacity"
+            style={{ color: 'var(--color-on-primary)' }}
             aria-label={t('explainer.close')}
           >
-            ×
+            <Icon name="close" className="text-2xl" />
           </button>
         </div>
 
@@ -62,14 +64,15 @@ export function ExplainerChat({ isOpen, onClose }: Props) {
           {isTyping && (
             <div className="flex justify-end mb-3">
               <div
-                className="flex items-center gap-1 px-4 py-3 rounded-[18px] text-white"
-                style={{ backgroundColor: '#006875' }}
+                className="flex items-center gap-1 px-4 py-3 rounded-[18px]"
+                style={{ background: 'var(--color-primary)' }}
               >
                 {[0, 1, 2].map(i => (
                   <span
                     key={i}
-                    className="w-2 h-2 rounded-full bg-white opacity-80"
+                    className="w-2 h-2 rounded-full opacity-80"
                     style={{
+                      background: 'var(--color-on-primary)',
                       animation: 'bounce 1.2s infinite',
                       animationDelay: `${i * 0.2}s`,
                     }}
@@ -80,7 +83,7 @@ export function ExplainerChat({ isOpen, onClose }: Props) {
           )}
 
           {error && (
-            <p className="text-center text-sm text-red-600 mt-2">
+            <p className="text-center text-sm mt-2" style={{ color: 'var(--color-error)' }}>
               {t('explainer.error')}
             </p>
           )}
@@ -88,7 +91,7 @@ export function ExplainerChat({ isOpen, onClose }: Props) {
           <div ref={bottomRef} />
         </div>
 
-        <div className="px-4 py-3 border-t border-[#bcc9cc] bg-white">
+        <div className="px-4 py-3" style={{ borderTop: '1px solid var(--color-outline-variant)', background: 'var(--color-surface)' }}>
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -96,18 +99,17 @@ export function ExplainerChat({ isOpen, onClose }: Props) {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={t('explainer.input_placeholder')}
-              className="flex-1 px-4 py-2 rounded-full border border-[#bcc9cc] text-sm outline-none focus:border-[#006875] transition-colors"
-              style={{ fontFamily: 'Assistant, sans-serif' }}
+              className="ss-input flex-1 rounded-full"
               dir="rtl"
             />
             <button
               onClick={send}
               disabled={!input.trim() || isTyping}
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white disabled:opacity-40 transition-opacity"
-              style={{ backgroundColor: '#006875' }}
+              className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-40 transition-opacity"
+              style={{ background: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
               aria-label={t('explainer.send')}
             >
-              ➤
+              <Icon name="send" className="text-xl" />
             </button>
           </div>
         </div>

@@ -35,3 +35,4 @@ functions/src/calc-engine/
 # Python agent — secrets
 agents/explainer/service-account.json
 agents/explainer/tmp/
+__pycache__/

@@ -1,4 +1,6 @@
 agno
+fastapi
+python-multipart
 anthropic
 voyageai
 lancedb
