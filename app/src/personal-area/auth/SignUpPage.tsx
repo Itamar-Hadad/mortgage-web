@@ -39,16 +39,20 @@ export function SignUpPage() {
   async function completeSignup(credential: UserCredential) {
     const newUser = isNewUser(credential)
     await migrateDraftOnSignup(credential.user.uid, newUser)
-    // Only grant the consumer role once the draft is safely in requests/{uid} —
-    // a cancelled/interrupted signup must never leave a permanently-privileged
-    // Auth user with no backing record (issue #5 AC).
-    if (newUser) {
-      try {
-        await claimConsumerRole()
-        await credential.user.getIdToken(true) // force-refresh token so role claim is included
-      } catch {
-        // role claim is best-effort — signup still completes without it
-      }
+    // Always (re-)claim the consumer role, not just when isNewUser is true.
+    // isNewUser only reflects whether the Auth *account* was just created —
+    // if an earlier attempt created the account but was interrupted before
+    // this claim ran (tab closed, network blip), every retry sees
+    // isNewUser=false and would otherwise skip claiming forever, leaving the
+    // account permanently unable to write to requests/{uid} (firestore.rules
+    // requires role=='consumer'). claimConsumerRole is idempotent, so calling
+    // it unconditionally here is safe.
+    try {
+      await claimConsumerRole()
+      await credential.user.getIdToken(true) // force-refresh token so role claim is included
+    } catch {
+      // role claim is best-effort — signup still completes without it;
+      // usePersonalArea's writes self-heal on the first permission-denied.
     }
     navigate('/personal-area')
   }

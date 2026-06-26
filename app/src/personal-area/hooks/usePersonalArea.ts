@@ -3,6 +3,31 @@ import { doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firest
 import { db, auth } from '../../shared/firebase'
 import { readDraft } from '../../consumer-flow/questionnaire/draftStorage'
 import type { QuestionnaireDraft } from '../../consumer-flow/questionnaire/types'
+import { claimConsumerRole } from '../auth/authService'
+
+// A 'permission-denied' write here almost always means the consumer role claim
+// never landed on this account (e.g. an earlier signup attempt was interrupted
+// between creating the Auth user and claiming the role — see SignUpPage.tsx
+// completeSignup). claimConsumerRole is idempotent, so re-claiming it and
+// force-refreshing the token before retrying once is a safe self-heal.
+async function withRoleSelfHeal<T>(op: () => Promise<T>): Promise<T> {
+  try {
+    return await op()
+  } catch (e) {
+    if ((e as { code?: string }).code !== 'permission-denied' || !auth.currentUser) throw e
+    await claimConsumerRole()
+    await auth.currentUser.getIdToken(true)
+    return await op()
+  }
+}
+
+function firestoreErrorMessage(e: unknown): string {
+  const code = (e as { code?: string })?.code
+  if (code === 'permission-denied') {
+    return 'אין הרשאה לשמור כרגע. ניסינו לתקן את ההרשאות אוטומטית ולא הצלחנו — נסו להתנתק ולהתחבר מחדש.'
+  }
+  return 'אירעה שגיאה בשמירה. נסו שוב.'
+}
 
 export type Track = 'רכישת תמהיל' | 'ליווי אינטרנטי' | 'יועץ אישי'
 export type SectionKey = 'personal' | 'mortgage' | 'credentials' | 'documents' | 'payment' | 'messages'
@@ -83,14 +108,16 @@ export function usePersonalArea() {
     setDraft((prev) => ({ ...prev, borrowers: updatedBorrowers }))
     if (uid) {
       try {
-        const ref = doc(db, 'requests', uid)
-        const snap = await getDoc(ref)
-        if (snap.exists()) {
-          await updateDoc(ref, { personal: updatedBorrowers })
-        } else {
-          // Edge case: doc not yet created (e.g. Google sign-in without draft)
-          await setDoc(ref, { personal: updatedBorrowers, createdAt: serverTimestamp() }, { merge: true })
-        }
+        await withRoleSelfHeal(async () => {
+          const ref = doc(db, 'requests', uid)
+          const snap = await getDoc(ref)
+          if (snap.exists()) {
+            await updateDoc(ref, { personal: updatedBorrowers })
+          } else {
+            // Edge case: doc not yet created (e.g. Google sign-in without draft)
+            await setDoc(ref, { personal: updatedBorrowers, createdAt: serverTimestamp() }, { merge: true })
+          }
+        })
       } catch {
         // Non-fatal — local state is already updated, Firestore will sync on next load
       }
@@ -108,15 +135,17 @@ export function usePersonalArea() {
     setSignatureLoading(true)
     setSignatureError('')
     try {
-      await setDoc(doc(db, 'requests', uid, 'events', 'signature'), {
-        uid,
-        timestamp: serverTimestamp(),
-        docVersion: '1.0',
-      })
+      await withRoleSelfHeal(() =>
+        setDoc(doc(db, 'requests', uid, 'events', 'signature'), {
+          uid,
+          timestamp: serverTimestamp(),
+          docVersion: '1.0',
+        }),
+      )
       setSignatureDone(true)
       setActiveSection('documents')
     } catch (e) {
-      setSignatureError((e as Error).message)
+      setSignatureError(firestoreErrorMessage(e))
     } finally {
       setSignatureLoading(false)
     }
