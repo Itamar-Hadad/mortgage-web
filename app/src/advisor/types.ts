@@ -70,3 +70,11 @@ export interface AdvisorTask {
   notes?: string
   createdAt: string
 }
+
+/** advisors/{uid} — admin-managed advisor directory (issue: admin "יועצים" tab). */
+export interface Advisor {
+  uid: string
+  firstName: string
+  lastName: string
+  email: string
+}

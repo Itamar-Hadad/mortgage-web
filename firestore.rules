@@ -63,6 +63,13 @@ service cloud.firestore {
         && request.auth.token.role == 'admin';
     }
 
+    // Advisor directory — written by the createAdvisor callable (admin-only),
+    // read by the admin screen's "יועצים" tab.
+    match /advisors/{advisorId} {
+      allow read, write: if request.auth != null
+        && request.auth.token.role == 'admin';
+    }
+
     // advisors' personal follow-up tasks — requestUid is an optional link
     // back to a client, not an access-control field (see ARCHITECTURE.md §13).
     match /tasks/{taskId} {

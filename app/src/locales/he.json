@@ -16,6 +16,7 @@
     "views": {
       "dashboard": "דשבורד",
       "clients": "לקוחות",
+      "advisors": "יועצים",
       "config": "הגדרות מערכת"
     },
     "dashboard": {
@@ -32,6 +33,18 @@
       "all_advisors": "כל היועצים",
       "approval_status": "סטטוס אישור",
       "created_at": "תאריך יצירה"
+    },
+    "advisors": {
+      "title": "יועצים",
+      "empty": "אין יועצים במערכת",
+      "add": "הוספת יועץ",
+      "first_name": "שם פרטי",
+      "last_name": "שם משפחה",
+      "email": "אימייל",
+      "password": "סיסמה",
+      "submit": "הוספה",
+      "cancel": "ביטול",
+      "error": "שגיאה ביצירת היועץ. נסו שוב."
     },
     "config": {
       "title": "הגדרות מערכת",

@@ -90,6 +90,23 @@ async function run() {
   const otherMessagesQuery = query(collection(otherConsumer.firestore(), 'requests', 'client2', 'messages'))
   await assertFails(getDocs(otherMessagesQuery))
 
+  // advisors/{uid} — admin-managed advisor directory (admin screen "יועצים" tab)
+  const admin1 = testEnv.authenticatedContext('admin1', { role: 'admin' })
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'advisors', 'advisor1'), {
+      uid: 'advisor1', firstName: 'דנה', lastName: 'כהן', email: 'dana@example.com',
+    })
+  })
+  await assertSucceeds(getDoc(doc(admin1.firestore(), 'advisors', 'advisor1')))
+  await assertSucceeds(
+    setDoc(doc(admin1.firestore(), 'advisors', 'advisor2'), {
+      uid: 'advisor2', firstName: 'יוני', lastName: 'לוי', email: 'yoni@example.com',
+    }),
+  )
+  await assertFails(getDoc(doc(advisor1.firestore(), 'advisors', 'advisor1')))
+  await assertFails(getDoc(doc(otherConsumer.firestore(), 'advisors', 'advisor1')))
+  await assertFails(getDoc(doc(anonymous.firestore(), 'advisors', 'advisor1')))
+
   console.log('All Firestore rules tests passed.')
   await testEnv.cleanup()
 }

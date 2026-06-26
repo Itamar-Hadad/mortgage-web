@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { collection, onSnapshot, query, where } from 'firebase/firestore'
+import { db, auth } from '../shared/firebase'
 import { clientsForAdvisor, sortClientsForAdvisor } from './clientList'
 import { ClientList } from './ClientListPanel'
 import { ClientProfile } from './ClientProfile'
 import { DocumentsTab } from './DocumentsTab'
 import { TasksTab } from './TasksTab'
-import { MessagesTab, makeSeedMessages } from './MessagesTab'
+import { MessagesTab } from './MessagesTab'
 import type { ChatMessage } from './MessagesTab'
-import { CURRENT_ADVISOR_UID, seedRequests } from './seedRequests'
+import { docToMortgageRequest } from './firestoreRequests'
 import { PageShell } from '../shared/AppLayout'
 import type { AdvisorTask, MortgageRequest } from './types'
 
@@ -18,19 +20,23 @@ const CLIENT_TABS = ['profile', 'documents', 'messages'] as const
 
 export function AdvisorScreen() {
   const { t } = useTranslation()
-  const [requests, setRequests] = useState<MortgageRequest[]>(() => seedRequests())
+  const advisorUid = auth.currentUser?.uid ?? ''
+  const [requests, setRequests] = useState<MortgageRequest[]>([])
   const [tasks, setTasks] = useState<AdvisorTask[]>([])
-  const [messagesByUid, setMessagesByUid] = useState<Record<string, ChatMessage[]>>(() => {
-    const first = seedRequests()[0]
-    if (!first) return {}
-    const name = first.personal[0] ? `${first.personal[0].first} ${first.personal[0].last}` : 'לקוח'
-    return { [first.uid]: makeSeedMessages(name) }
-  })
+  const [messagesByUid, setMessagesByUid] = useState<Record<string, ChatMessage[]>>({})
   const [selectedUid, setSelectedUid] = useState<string | null>(null)
   const [view, setView] = useState<View>('clients')
   const [clientTab, setClientTab] = useState<ClientTab>('profile')
 
-  const clients = sortClientsForAdvisor(clientsForAdvisor(requests, CURRENT_ADVISOR_UID))
+  useEffect(() => {
+    if (!advisorUid) return
+    const q = query(collection(db, 'requests'), where('assignedAdvisorUid', '==', advisorUid))
+    return onSnapshot(q, (snap) => {
+      setRequests(snap.docs.map((d) => docToMortgageRequest(d.id, d.data())))
+    })
+  }, [advisorUid])
+
+  const clients = sortClientsForAdvisor(clientsForAdvisor(requests, advisorUid))
   const selected = clients.find((client) => client.uid === selectedUid) ?? clients[0] ?? null
 
   // Pin the default selection once — otherwise an action that changes sort
@@ -49,7 +55,7 @@ export function AdvisorScreen() {
       ...prev,
       {
         id: `task-${prev.length}-${requestUid ?? 'general'}`,
-        advisorUid: CURRENT_ADVISOR_UID,
+        advisorUid,
         requestUid,
         text,
         done: false,

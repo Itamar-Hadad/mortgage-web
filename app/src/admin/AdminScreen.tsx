@@ -1,12 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { collection, onSnapshot } from 'firebase/firestore'
+import { db } from '../shared/firebase'
 import { PageShell } from '../shared/AppLayout'
 import { countRequestsByType } from './dashboard'
 import { clientsForAdvisor } from '../advisor/clientList'
-import { seedRequests } from '../advisor/seedRequests'
 import { ClientProfile } from '../advisor/ClientProfile'
 import { DocumentsTab } from '../advisor/DocumentsTab'
-import type { MortgageRequest, AdvisorTask } from '../advisor/types'
+import { docToMortgageRequest } from '../advisor/firestoreRequests'
+import { assignAdvisorInFirestore } from './adminFirestore'
+import { AdvisorsView } from './AdvisorsView'
+import type { MortgageRequest, AdvisorTask, Advisor } from '../advisor/types'
 import type { RiskRule } from '../calc-engine/risk'
 import {
   defaultGeneralRates, defaultClockTemplates, defaultIndicesConfig, defaultRiskRules,
@@ -14,16 +18,7 @@ import {
   type GeneralRates, type ClockTemplates, type IndicesConfig,
 } from './configDefaults'
 
-// ── Seed / stubs ──────────────────────────────────────────────────────────────
-// Same pattern as AdvisorScreen — swapped for Firestore query when admin Auth
-// claim lands (ARCHITECTURE.md §13, extension-point row "מסך יועץ (#8)").
-
-const ALL_ADVISORS = [
-  { uid: 'advisor-demo', name: 'יועץ א — דוד לוי' },
-  { uid: 'advisor-other', name: 'יועץ ב — מיכל אברהם' },
-]
-
-type AdminView = 'dashboard' | 'clients' | 'config'
+type AdminView = 'dashboard' | 'clients' | 'advisors' | 'config'
 type ConfigTab = 'generalRates' | 'riskRules' | 'clockTemplates' | 'monthlyIndices'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -63,13 +58,14 @@ function SaveBar({ state }: { state: 'idle' | 'saved' | 'error' }) {
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 
-function DashboardView({ requests }: { requests: MortgageRequest[] }) {
+function DashboardView({ requests, advisors }: { requests: MortgageRequest[]; advisors: Advisor[] }) {
   const { t } = useTranslation()
   const byType = countRequestsByType(requests)
   const totalOpen = Object.values(byType).reduce((s, n) => s + n, 0)
 
-  const advisorLoad = ALL_ADVISORS.map((a) => ({
-    ...a,
+  const advisorLoad = advisors.map((a) => ({
+    uid: a.uid,
+    name: `${a.firstName} ${a.lastName}`,
     count: clientsForAdvisor(requests, a.uid).filter((r) => !r.archived).length,
   }))
   const unassigned = requests.filter((r) => !r.archived && !r.assignedAdvisorUid).length
@@ -168,9 +164,11 @@ type ClientDetailTab = 'profile' | 'documents'
 
 function ClientsView({
   requests,
+  advisors,
   onAssign,
 }: {
   requests: MortgageRequest[]
+  advisors: Advisor[]
   onAssign: (requestUid: string, advisorUid: string | null) => void
 }) {
   const { t } = useTranslation()
@@ -199,7 +197,7 @@ function ClientsView({
             onChange={(e) => { setFilterAdvisor(e.target.value); setSelectedUid(null) }}
           >
             <option value="all">{t('admin.clients.all_advisors')}</option>
-            {ALL_ADVISORS.map((a) => <option key={a.uid} value={a.uid}>{a.name}</option>)}
+            {advisors.map((a) => <option key={a.uid} value={a.uid}>{a.firstName} {a.lastName}</option>)}
             <option value="__unassigned__">לא משויך</option>
           </select>
         </div>
@@ -233,7 +231,7 @@ function ClientsView({
                   onChange={(e) => onAssign(r.uid, e.target.value || null)}
                 >
                   <option value="">— {t('admin.clients.unassigned')} —</option>
-                  {ALL_ADVISORS.map((a) => <option key={a.uid} value={a.uid}>{a.name}</option>)}
+                  {advisors.map((a) => <option key={a.uid} value={a.uid}>{a.firstName} {a.lastName}</option>)}
                 </select>
               </div>
             </button>
@@ -762,17 +760,31 @@ function ConfigView() {
 
 export function AdminScreen() {
   const { t } = useTranslation()
-  const [requests, setRequests] = useState<MortgageRequest[]>(seedRequests)
+  const [requests, setRequests] = useState<MortgageRequest[]>([])
+  const [advisors, setAdvisors] = useState<Advisor[]>([])
   const [view, setView] = useState<AdminView>('dashboard')
+
+  useEffect(() => {
+    return onSnapshot(collection(db, 'requests'), (snap) => {
+      setRequests(snap.docs.map((d) => docToMortgageRequest(d.id, d.data())))
+    })
+  }, [])
+
+  useEffect(() => {
+    return onSnapshot(collection(db, 'advisors'), (snap) => {
+      setAdvisors(snap.docs.map((d) => d.data() as Advisor))
+    })
+  }, [])
 
   function handleAssign(requestUid: string, advisorUid: string | null) {
     setRequests((prev) => prev.map((r) => (r.uid === requestUid ? { ...r, assignedAdvisorUid: advisorUid } : r)))
-    // In production: assignAdvisorInFirestore(db, requestUid, advisorUid)
+    void assignAdvisorInFirestore(db, requestUid, advisorUid)
   }
 
   const VIEWS: { key: AdminView; label: string }[] = [
     { key: 'dashboard', label: t('admin.views.dashboard') },
     { key: 'clients', label: t('admin.views.clients') },
+    { key: 'advisors', label: t('admin.views.advisors') },
     { key: 'config', label: t('admin.views.config') },
   ]
 
@@ -809,8 +821,9 @@ export function AdminScreen() {
           ))}
         </div>
 
-        {view === 'dashboard' && <DashboardView requests={requests} />}
-        {view === 'clients' && <ClientsView requests={requests} onAssign={handleAssign} />}
+        {view === 'dashboard' && <DashboardView requests={requests} advisors={advisors} />}
+        {view === 'clients' && <ClientsView requests={requests} advisors={advisors} onAssign={handleAssign} />}
+        {view === 'advisors' && <AdvisorsView advisors={advisors} />}
         {view === 'config' && <ConfigView />}
       </div>
     </PageShell>
