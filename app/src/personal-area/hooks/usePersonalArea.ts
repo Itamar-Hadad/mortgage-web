@@ -147,15 +147,26 @@ export function usePersonalArea() {
     setSignatureLoading(true)
     setSignatureError('')
     try {
-      // Proactively ensure the token has role:'consumer' before the write.
-      // This avoids the retry race-condition where Firestore hasn't received
-      // the refreshed token yet (onIdTokenChanged fires async).
       await ensureConsumerRole()
-      await setDoc(doc(db, 'requests', uid, 'events', 'signature'), {
-        uid,
-        timestamp: serverTimestamp(),
-        docVersion: '1.0',
-      })
+      // Write the signature event directly onto requests/{uid} — the parent
+      // document's `allow update` rule (uid match + role:'consumer') is simpler
+      // than the events sub-collection rule and avoids subcollection permission
+      // issues. The signedAt field is enough for audit purposes.
+      const ref = doc(db, 'requests', uid)
+      const snap = await getDoc(ref)
+      if (snap.exists()) {
+        await updateDoc(ref, {
+          signedAt: serverTimestamp(),
+          signatureDocVersion: '1.0',
+        })
+      } else {
+        await setDoc(ref, {
+          uid,
+          signedAt: serverTimestamp(),
+          signatureDocVersion: '1.0',
+          createdAt: serverTimestamp(),
+        }, { merge: true })
+      }
       setSignatureDone(true)
       setActiveSection('documents')
     } catch (e) {
