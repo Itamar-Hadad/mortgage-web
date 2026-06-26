@@ -47,6 +47,34 @@
 
 **אזור אישי — נעילה מדורגת (מאומת מול Base44 בפועל, IMG_9305/9308/9309):** פרטים אישיים → נתוני משכנתא → (נעול עד שניתן) כתבי הסמכה → (נעול עד שנחתם) העלאת מסמכים → (נעול עד שהושלם) אישור עקרוני. כל מסמך שמועלה מקבל סטטוס `ממתין לבדיקה` עד אישור/דחייה ע"י יועץ. תבנית זו ב-Base44 תקינה ולא הבעיה — לשמר אותה.
 
+## 4א. דף הבית ומיפוי נתיבים (ADR-0007)
+
+נוסף בסשן 2 — לפני כן `"/"` הפנה ישירות לשאלון.
+
+| נתיב | קומפוננטה | הרשאה |
+|---|---|---|
+| `/` | `HomePage` | ציבורי |
+| `/questionnaire` | `Questionnaire` | ציבורי (טיוטה ב-localStorage) |
+| `/sign-in` | `SignInPage` | ציבורי |
+| `/sign-up` | `SignUpPage` | ציבורי |
+| `/personal-area` | `PersonalArea` | `role: consumer` (auth guard — redirect `/sign-in`) |
+| `/advisor` | `AdvisorScreen` | `role: advisor` (guard עתידי — כרגע seed data) |
+| `/admin` | `AdminScreen` | `role: admin` (guard עתידי — כרגע seed data) |
+
+**קריטי: `SignInPage` מפנה לפי role לאחר כניסה.**
+לאחר כל כניסה (email או Google) קוראים ל-`getUserRole()` → `getIdTokenResult()` ומפנים:
+- `role:'admin'` → `/admin`
+- `role:'advisor'` → `/advisor`
+- ללא role / `role:'consumer'` → `/personal-area`
+
+זה מאפשר ל**מנהל וליועץ להיכנס דרך אותו `SignInPage`** — הניתוב הוא אוטומטי לפי ה-claim בטוקן. אין צורך בנתיב כניסה נפרד לצוות.
+
+**דף הבית מכיל:**
+- Hero section: כרטיסי 3 שירותים (משכנתא חדשה → `/questionnaire`, מחזור / ביטוח → placeholder עם "בקרוב")
+- "כניסת צוות" בניווט (→ `/sign-in`)
+- Aware ל-auth state: מציג "האזור האישי שלי" כשמחובר, "כניסה/הרשמה" כשלא מחובר
+- סקציות: How-it-works, Stats (מונים אנימטיביים), Value props, בנקים, CTA
+
 ## 5. מסכי מנהל ויועץ
 
 מאומתים מול הטאבים הקיימים בסימולטור (`סימולטור_משכנתא.html`) ומול מסכי Base44 (`/AdminDashboard`, `/AdvisorDashboard`):
@@ -105,6 +133,42 @@
 - **ולידציית קובץ ב-Cloud Function**: allowlist סוג קובץ (pdf/jpg/png), max size (~15MB), סקאן מאלוור/וירוסים בסיסי. דחייה = סטטוס `rejected`+סיבה ב-Firestore, לא רק 4xx שקט.
 - **OTP**: טלפון (Firebase Phone Auth) כראשי, מייל+סיסמה כחלופה — תואם "מייל/טלפון/חפ" שבמסמך עבור משתמש רשום.
 
+## 11א. מימושים שנחתו בסשן 2 (לא היו בסקופ הסשן הראשון)
+
+### Auth & UX (PR #25, merged)
+- Google sign-in/up בשני מסכי הכניסה
+- קישורים הדדיים `/sign-up` ↔ `/sign-in`
+- כפתור "כניסה" ב-`ResultsPage` לאחר הצגת התוצאות
+- Auth guard ב-`PersonalArea` — redirect ל-`/sign-in` אם לא מחובר
+- כפתור התנתקות ב-`PersonalAreaLayout`
+
+### Firestore persistence ב-PersonalArea
+- `usePersonalArea`: טוען `requests/{uid}` מ-Firestore ב-mount; fallback ל-localStorage; spinner בטעינה
+- `PersonalDetailsSection.onComplete`: שומר לווים ל-`requests/{uid}.personal` ב-Firestore
+- Google sign-in: יוצר `requests/{uid}` אם לא קיים
+
+### CompletionPopup + workflow מנהל
+- `CompletionPopup.tsx`: דיאלוג חגיגה מונפש כאשר המשתמש משלים את כל סקציות האזור האישי; כותב `status: 'pending_advisor'` ל-`requests/{uid}`
+- `adminFirestore.assignAdvisorInFirestore`: יוצר אוטומטית 2 משימות ליועץ המשויך:
+  1. "לעבור על פרטי הלקוח ולאשר את המסמכים"
+  2. "ליצור קשר עם הלקוח לתיאום המשך התהליך"
+
+### Global Design System
+- `index.css`: אנימציות כניסה (`fade-up`, `scale-in`, `slide-right`, `float`, `glow-pulse`), stagger delays, shimmer CTA, `card-hover` lift, `gradient-text`, `glass-panel-deep`
+
+### הקבצים שנוספו/שונו בסשן 2
+| קובץ | שינוי |
+|---|---|
+| `app/src/pages/HomePage.tsx` | חדש — דף נחיתה מלא |
+| `app/src/App.tsx` | `/` → `HomePage`, `/questionnaire` → `Questionnaire` |
+| `app/src/shared/AppLayout.tsx` | לוגו אמיתי, clickable → `/` |
+| `app/src/personal-area/PersonalAreaLayout.tsx` | לוגו אמיתי, greeting עם avatar ושם |
+| `app/src/personal-area/PersonalArea.tsx` | cascade שם: draft → displayName → email |
+| `app/src/personal-area/auth/SignInPage.tsx` | redirect לפי role לאחר כניסה |
+| `app/src/personal-area/auth/authService.ts` | `getUserRole()` חדש |
+| `app/src/personal-area/CompletionPopup.tsx` | חדש — popup חגיגה |
+| `app/public/logo.png` | לוגו SimpleSave האמיתי |
+
 ## 12. שאלה פתוחה אחת שנותרה — לא ניתנת לפתרון טכני
 
 - **"הטמעת 5 סעיפי וריפיקציה" (10% מהמחוון)** — `מחוון לציון הפרוייקט (3).docx` לא מגדיר בפועל מה הם 5 הסעיפים. יש לברר עם קרן כליף/הנחיות ההאקתון — זו לא החלטה ארכיטקטונית, אלא פרט-הגשה חיצוני שחסר.
@@ -126,7 +190,8 @@
 | מיון רשימת לקוחות ליועץ (#8) | `nextActionDate(request)` מחשב לפי המסמך הממתין-לבדיקה הישן ביותר בלבד — אין עדיין מקור-נתונים ל"הודעות חדשות" (#10 חסום) | חתימת `nextActionDate(request): Date \| null`, ערך נמוך יותר = דחוף יותר | כש-#10 (הודעות ליועץ) ייבנה — הפונקציה תקבל קלט שני (תאריך הודעה לא-נקראת) ותחזיר את המוקדם מבין השניים, בלי לשנות צרכנים קיימים |
 | משימות-מעקב ליועץ (#8) | קולקשיין `tasks` נפרד, נוצר רק ידנית ע"י היועץ (`requestUid` אופציונלי לקישור ללקוח) | מבנה מסמך `{advisorUid, requestUid\|null, text, dueDate?, done, createdAt}` | יצירה אוטומטית של משימת-מעקב כששיוך לקוח↔יועץ חדש נקבע (#11, מנהל) — לא נבנה כרגע, אין AC שדורש זאת |
 | מסך יועץ (#8) | `AdvisorScreen` רץ מול נתוני seed ב-local state (`seedRequests.ts`, `CURRENT_ADVISOR_UID` קבוע) — #5 (הרשמה/Auth) כבר נחת ב-`main` וכותב `requests/{uid}` אמיתי, אבל אין עדיין Auth ל-role:'advisor' עצמו ואין #11 (מנהל) שמקצה `assignedAdvisorUid` — אז אין עדיין "יועץ אמיתי" שמתחבר | `approveDocument`/`rejectDocument`/`addTask`/`listTasksForAdvisor`/`updateTask` ו-`firestore.rules` כבר אמיתיים ונבדקו מול ה-Emulator; `MortgageRequest` כבר מותאם לצורה שכותב `migrateDraftOnSignup.ts` (`docs/contracts/questionnaire-draft.md`) — `loanPurpose`/`propertySource` top-level, לא בתוך `financial`; ה-seam היחיד הוא מקור הנתונים | כש-role:'advisor' + `assignedAdvisorUid` אמיתיים יהיו זמינים (#11 או הקצאה ידנית) — `seedRequests()` מוחלף ב-query/`onSnapshot` מ-Firestore (כולל המרת `createdAt` מ-Firestore `Timestamp` ל-`Date`, כרגע ISO string ב-seed), ו-`setRequests`/`setTasks` המקומיים מוחלפים בקריאות ל-`*InFirestore`/`addTask` הקיימים; שום שינוי בקומפוננטות עצמן |
-| Roles (סעיף 1-2) | 3 ערכי custom claim: consumer/advisor/admin | שם השדה `role` ב-custom claims + `assignedAdvisorUid` בכל בקשה | תפקיד נוסף (לדוגמה "responsible compliance") = ערך claim חדש + ענף חדש בחוקי Firestore, לא מודל חדש |
+| Roles (סעיף 1-2) | 3 ערכי custom claim: consumer/advisor/admin. `getUserRole()` ב-`authService.ts` מחזיר את ה-role מה-ID token. `SignInPage` מפנה לפי role בכל כניסה (email/Google). | שם השדה `role` ב-custom claims + `assignedAdvisorUid` בכל בקשה | תפקיד נוסף (לדוגמה "responsible compliance") = ערך claim חדש + ענף חדש בחוקי Firestore, לא מודל חדש |
+| auth guard מנהל/יועץ | `/advisor` ו-`/admin` נטענים ללא בדיקת auth (seed data) — `SignInPage` כבר מפנה לשם לפי role | route-level guard שבודק `auth.currentUser` ו-`getUserRole()` | כש-role:'advisor'/'admin' נוצרים ב-Firebase Console — הוספת `<Navigate>` guard כמו ב-`PersonalArea`; seed data מוחלף ב-Firestore query |
 | צפייה בקובץ מסמך (#8) | `RequestDocument.fileUrl` לא מוגדר ב-seed; טאב "מסמכים" מציג "צפייה במסמך" מנוטרל/ללא קישור כשהוא חסר | שדה `fileUrl?: string` על `RequestDocument` | כש-#9 (העלאת מסמכים, חסום) יעלה קובץ אמיתי ל-Storage ויכתוב Signed URL לשדה הזה — שום שינוי ב-DocumentsTab |
 | הודעות/מסמכים בטאבים פנימיים ללקוח (#8) | "הודעות" placeholder, "מסמכים"/"פרופיל לקוח" משויכים ל-`selected` (הלקוח הנבחר בסיידבר) | טאבים פנימיים תחת תצוגת לקוח יחיד, לא אגרגציה חוצה-לקוחות | כש-issue חדש ייפתח לצד-יועץ של הודעות (אין כיום — #10 הוא "צד צרכן" בלבד) — אותו מיקום בטאב הפנימי, לא טאב עליון נפרד |
 

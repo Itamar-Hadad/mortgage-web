@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, Link } from 'react-router-dom'
-import { signInWithEmail, signInWithGoogle, isNewUser } from './authService'
+import { signInWithEmail, signInWithGoogle, isNewUser, getUserRole, firebaseErrorMessage } from './authService'
 import { migrateDraftOnSignup } from './migrateDraftOnSignup'
 import { claimConsumerRole } from './authService'
 import { AuthPageShell, Icon } from '../../shared/AppLayout'
@@ -19,15 +19,22 @@ export function SignInPage() {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
+  async function redirectByRole() {
+    const role = await getUserRole()
+    if (role === 'admin') navigate('/admin')
+    else if (role === 'advisor') navigate('/advisor')
+    else navigate('/personal-area')
+  }
+
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setSubmitting(true)
     try {
       await signInWithEmail(email, password)
-      navigate('/personal-area')
-    } catch {
-      setError(t('sign_in.error_generic'))
+      await redirectByRole()
+    } catch (err) {
+      setError(firebaseErrorMessage(err))
     } finally {
       setSubmitting(false)
     }
@@ -57,9 +64,9 @@ export function SignInPage() {
               await claimConsumerRole()
               await credential.user.getIdToken(true)
             }
-            navigate('/personal-area')
-          } catch {
-            setError(t('sign_in.error_generic'))
+            await redirectByRole()
+          } catch (err) {
+            setError(firebaseErrorMessage(err))
           } finally {
             setSubmitting(false)
           }

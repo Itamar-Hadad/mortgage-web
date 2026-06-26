@@ -41,7 +41,13 @@ export function PersonalArea() {
     return <TrackSelector onSelect={selectTrack} />
   }
 
-  const userName = draft.borrowers[0]?.first || undefined
+  // Name cascade: filled form → Google displayName → email prefix
+  const currentUser = auth.currentUser
+  const userName =
+    draft.borrowers[0]?.first ||
+    currentUser?.displayName?.split(' ')[0] ||
+    currentUser?.email?.split('@')[0] ||
+    undefined
 
   return (
     <>

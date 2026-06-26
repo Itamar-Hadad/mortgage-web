@@ -10,6 +10,8 @@ import {
   signInWithGoogle,
   isNewUser,
   claimConsumerRole,
+  firebaseErrorMessage,
+  normaliseIsraeliPhone,
 } from './authService'
 import { migrateDraftOnSignup } from './migrateDraftOnSignup'
 import { AuthPageShell, Icon } from '../../shared/AppLayout'
@@ -52,11 +54,12 @@ export function SignUpPage() {
     setError(null)
     setSubmitting(true)
     try {
+      const e164 = normaliseIsraeliPhone(phoneNumber)
       const verifier = createRecaptchaVerifier(RECAPTCHA_CONTAINER_ID)
-      confirmationRef.current = await sendPhoneOtp(phoneNumber, verifier)
+      confirmationRef.current = await sendPhoneOtp(e164, verifier)
       setPhoneStep('enter-code')
-    } catch {
-      setError(t('sign_up.error_generic'))
+    } catch (err) {
+      setError(firebaseErrorMessage(err))
     } finally {
       setSubmitting(false)
     }
@@ -70,8 +73,8 @@ export function SignUpPage() {
     try {
       const credential = await confirmPhoneOtp(confirmationRef.current, code)
       await completeSignup(credential)
-    } catch {
-      setError(t('sign_up.error_generic'))
+    } catch (err) {
+      setError(firebaseErrorMessage(err))
     } finally {
       setSubmitting(false)
     }
@@ -84,8 +87,8 @@ export function SignUpPage() {
     try {
       const credential = await signUpWithEmail(email, password)
       await completeSignup(credential)
-    } catch {
-      setError(t('sign_up.error_generic'))
+    } catch (err) {
+      setError(firebaseErrorMessage(err))
     } finally {
       setSubmitting(false)
     }
@@ -111,8 +114,8 @@ export function SignUpPage() {
           try {
             const credential = await signInWithGoogle()
             await completeSignup(credential)
-          } catch {
-            setError(t('sign_up.error_generic'))
+          } catch (err) {
+            setError(firebaseErrorMessage(err))
           } finally {
             setSubmitting(false)
           }
@@ -173,10 +176,14 @@ export function SignUpPage() {
               id="phone-number"
               type="tel"
               className="ss-input"
+              placeholder="05X-XXXXXXX"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               required
             />
+            <p className="text-xs mt-1" style={{ color: 'var(--color-on-surface-variant)' }}>
+              ניתן להזין בפורמט ישראלי (052...) — המרה ל-E.164 אוטומטית
+            </p>
           </div>
           <div id={RECAPTCHA_CONTAINER_ID} />
           <button
