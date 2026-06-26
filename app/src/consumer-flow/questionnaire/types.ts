@@ -45,6 +45,12 @@ export interface Borrower {
    * this a non-breaking addition to a type shared with #4's merged code.
    */
   idNumber?: string
+  /**
+   * מצב משפחתי — optional for the same reason as idNumber: only the
+   * personal-area's PersonalDetailsSection collects it, not the consumer
+   * questionnaire (#4).
+   */
+  marital?: string
 }
 
 /** הכנסה נוספת — story #12. NEW. */

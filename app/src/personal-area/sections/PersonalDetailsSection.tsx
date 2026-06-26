@@ -45,6 +45,7 @@ export function PersonalDetailsSection({ draft, onComplete }: Props) {
       birth: b.birth,
       income: b.income === '' ? '' : Number(b.income),
       isPropertyOwner: draft.borrowers[idx]?.isPropertyOwner ?? true,
+      marital: b.marital,
     }))
     onComplete(updated)
   }
