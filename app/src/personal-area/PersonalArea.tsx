@@ -10,6 +10,9 @@ import { MessagesSection } from './sections/MessagesSection'
 import { Navigate } from 'react-router-dom'
 import { auth } from '../shared/firebase'
 import { CompletionPopup } from './CompletionPopup'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { ExplainerChat } from '../consumer-flow/explainer/ExplainerChat'
 
 export function PersonalArea() {
   const {
@@ -24,6 +27,9 @@ export function PersonalArea() {
     showCompletionPopup,
     dismissCompletionPopup,
   } = usePersonalArea()
+
+  const [explainerOpen, setExplainerOpen] = useState(false)
+  const { t } = useTranslation()
 
   if (!auth.currentUser) {
     return <Navigate to="/sign-in" replace />
@@ -101,6 +107,19 @@ export function PersonalArea() {
         <MessagesSection uid={uid} />
       )}
     </PersonalAreaLayout>
+
+      <button
+        onClick={() => setExplainerOpen(true)}
+        className="fixed bottom-6 left-6 z-40 px-5 py-3 rounded-full text-white font-semibold text-sm shadow-lg hover:opacity-90 transition-opacity"
+        style={{ backgroundColor: '#006875', fontFamily: 'Assistant, sans-serif' }}
+      >
+        {t('explainer.button_label')}
+      </button>
+
+      <ExplainerChat
+        isOpen={explainerOpen}
+        onClose={() => setExplainerOpen(false)}
+      />
     </>
   )
 }
