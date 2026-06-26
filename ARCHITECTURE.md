@@ -108,6 +108,12 @@ allow update: if auth.uid == requestId && role == 'consumer'  // עדכונים 
 
 מנהל: מסך "לקוחות" + "יועצים" — שיוך לקוח (uid הבקשה) ליועץ (`assignedAdvisorUid`), מעבר בין יועצים לראות את הלקוחות שלהם.
 
+**יצירת יועץ (issue #11, נחת):**
+- `AdvisorsView.tsx` — טאב "יועצים" באדמין: רשימת יועצים + טופס יצירה (שם פרטי/משפחה/מייל/סיסמה)
+- `createAdvisorCallable` (Cloud Function, `functions/src/createAdvisor.ts`) — מאמת `role:'admin'`, קורא `Auth.createUser`, מגדיר claim `role:'advisor'`, כותב ל-`advisors/{uid}` ב-Firestore
+- `AdminScreen` מאזין ל-`onSnapshot(collection(db,'advisors'))` — רשימת יועצים זמינה בזמן אמת ברשימת הלקוחות ובdashboard עומס-יועצים
+- **חובה לפרוס בנפרד:** `firebase deploy --only functions` לאחר שינוי בפונקציה, `firebase deploy --only firestore:rules` לאחר שינוי בחוקים — push לגיט לא מפרוס ל-Firebase אוטומטית
+
 ## 6. מנוע החישוב — היכן הוא רץ ולמה
 
 **אילוץ קריטי (ללא שינוי): נוסחאות `calcRoute`/`calcMix`/`PMT`/`mixRisk` מהסימולטור הקיים נשארות בדיוק כפי שהן.**
@@ -138,7 +144,7 @@ allow update: if auth.uid == requestId && role == 'consumer'  // עדכונים 
 | **Firebase Auth** | התחברות (טלפון/מייל+OTP לפי המסמך), custom claims לתפקיד (consumer/advisor/admin) |
 | **Firestore** | `requests/{uid}` (כולל מערך לווים, תמהילים נבחרים, מצב מסלול), מסמכי מטא-דאטה למסמכים, `templates`/`generalRates`/`riskRules`/`monthlyIndices` (קונפיג מנוהל ע"י מנהל), `advisors`, סטטוס אישור מסמך |
 | **Storage** | קבצים פיזיים (תלושי שכר, ת"ז, כתבי הסמכה...), Security Rules לפי uid הבעלים + role |
-| **Cloud Functions (Node/TS)** | (1) מנוע החישוב הציבורי (סעיף 6) (2) ולידציית קובץ לפני שמירה (3) מייל בעת אישור/דחיית מסמך (4) Signed URL |
+| **Cloud Functions (Node/TS)** | (1) מנוע החישוב הציבורי (סעיף 6) (2) ולידציית קובץ + Signed URL (`uploadDocumentCallable`) (3) הגדרת `role:'consumer'` בהרשמה (`claimConsumerRoleOnRegistration`) (4) יצירת יועץ + הגדרת `role:'advisor'` (`createAdvisorCallable`) |
 | **Cloud Functions (Python, Agno)** | (5) סוכן-קבלה (6) סוכן-הסבר — ראו סעיף 14, ADR-0006. Runtime נפרד מכוון, לא טעות. |
 
 ## 10. פיצ'רים שנדחו במכוון מהסבב הזה
@@ -207,9 +213,9 @@ allow update: if auth.uid == requestId && role == 'consumer'  // עדכונים 
 | מנוע חישוב (סעיף 6) | `calcRoute`/`calcMix` רץ client-side (מנהל/יועץ) + Cloud Function (קצה) מאותו קוד מקור | חתימת הפונקציות (route/params in → calc object out) | הוספת board/route type חדש נכנסת בתוך `calcRoute` בלי לשבור את הפיצול client/Cloud Function |
 | מיון רשימת לקוחות ליועץ (#8) | `nextActionDate(request)` מחשב לפי המסמך הממתין-לבדיקה הישן ביותר בלבד — אין עדיין מקור-נתונים ל"הודעות חדשות" (#10 חסום) | חתימת `nextActionDate(request): Date \| null`, ערך נמוך יותר = דחוף יותר | כש-#10 (הודעות ליועץ) ייבנה — הפונקציה תקבל קלט שני (תאריך הודעה לא-נקראת) ותחזיר את המוקדם מבין השניים, בלי לשנות צרכנים קיימים |
 | משימות-מעקב ליועץ (#8) | קולקשיין `tasks` נפרד, נוצר רק ידנית ע"י היועץ (`requestUid` אופציונלי לקישור ללקוח) | מבנה מסמך `{advisorUid, requestUid\|null, text, dueDate?, done, createdAt}` | יצירה אוטומטית של משימת-מעקב כששיוך לקוח↔יועץ חדש נקבע (#11, מנהל) — לא נבנה כרגע, אין AC שדורש זאת |
-| מסך יועץ (#8) | `AdvisorScreen` רץ מול נתוני seed ב-local state (`seedRequests.ts`, `CURRENT_ADVISOR_UID` קבוע) — #5 (הרשמה/Auth) כבר נחת ב-`main` וכותב `requests/{uid}` אמיתי, אבל אין עדיין Auth ל-role:'advisor' עצמו ואין #11 (מנהל) שמקצה `assignedAdvisorUid` — אז אין עדיין "יועץ אמיתי" שמתחבר | `approveDocument`/`rejectDocument`/`addTask`/`listTasksForAdvisor`/`updateTask` ו-`firestore.rules` כבר אמיתיים ונבדקו מול ה-Emulator; `MortgageRequest` כבר מותאם לצורה שכותב `migrateDraftOnSignup.ts` (`docs/contracts/questionnaire-draft.md`) — `loanPurpose`/`propertySource` top-level, לא בתוך `financial`; ה-seam היחיד הוא מקור הנתונים | כש-role:'advisor' + `assignedAdvisorUid` אמיתיים יהיו זמינים (#11 או הקצאה ידנית) — `seedRequests()` מוחלף ב-query/`onSnapshot` מ-Firestore (כולל המרת `createdAt` מ-Firestore `Timestamp` ל-`Date`, כרגע ISO string ב-seed), ו-`setRequests`/`setTasks` המקומיים מוחלפים בקריאות ל-`*InFirestore`/`addTask` הקיימים; שום שינוי בקומפוננטות עצמן |
+| מסך יועץ (#8) | `AdvisorScreen` עדיין רץ מול נתוני seed ב-local state (`seedRequests.ts`). Auth ל-role:'advisor' כבר אמיתי (דרך `createAdvisorCallable`), ו-`assignedAdvisorUid` ניתן להקצות מטאב "לקוחות" של מנהל — אבל `AdvisorScreen` עצמו עדיין לא שולף נתונים מ-Firestore לפי המשתמש המחובר | `approveDocument`/`rejectDocument`/`addTask`/`listTasksForAdvisor`/`updateTask` ו-`firestore.rules` כבר אמיתיים; `MortgageRequest` מותאם לצורה שכותב `migrateDraftOnSignup.ts`; ה-seam היחיד הוא מקור הנתונים | `seedRequests()` מוחלף ב-`onSnapshot` שמסנן לפי `assignedAdvisorUid == auth.currentUser.uid`; `setRequests`/`setTasks` מוחלפים בקריאות ל-`*InFirestore` הקיימים — שום שינוי בקומפוננטות |
 | Roles (סעיף 1-2) | 3 ערכי custom claim: consumer/advisor/admin. `getUserRole()` ב-`authService.ts` מחזיר את ה-role מה-ID token. `SignInPage` מפנה לפי role בכל כניסה (email/Google). | שם השדה `role` ב-custom claims + `assignedAdvisorUid` בכל בקשה | תפקיד נוסף (לדוגמה "responsible compliance") = ערך claim חדש + ענף חדש בחוקי Firestore, לא מודל חדש |
-| auth guard מנהל/יועץ | `/advisor` ו-`/admin` נטענים ללא בדיקת auth (seed data) — `SignInPage` כבר מפנה לשם לפי role | route-level guard שבודק `auth.currentUser` ו-`getUserRole()` | כש-role:'advisor'/'admin' נוצרים ב-Firebase Console — הוספת `<Navigate>` guard כמו ב-`PersonalArea`; seed data מוחלף ב-Firestore query |
+| auth guard מנהל/יועץ | **מומש במלואו:** `RequireRole` guard ב-`app/src/shared/RequireRole.tsx` עוטף את `/admin` ו-`/advisor`; `StaffSignInPage` מנתב לפי role claim; `createAdvisorCallable` מגדיר `role:'advisor'` לאנשי צוות שנוצרו ע"י מנהל — לא נדרשת הגדרה ידנית ב-Firebase Console | — | — |
 | צפייה בקובץ מסמך (#8) | `RequestDocument.fileUrl` לא מוגדר ב-seed; טאב "מסמכים" מציג "צפייה במסמך" מנוטרל/ללא קישור כשהוא חסר | שדה `fileUrl?: string` על `RequestDocument` | כש-#9 (העלאת מסמכים, חסום) יעלה קובץ אמיתי ל-Storage ויכתוב Signed URL לשדה הזה — שום שינוי ב-DocumentsTab |
 | הודעות/מסמכים בטאבים פנימיים ללקוח (#8) | "הודעות" placeholder, "מסמכים"/"פרופיל לקוח" משויכים ל-`selected` (הלקוח הנבחר בסיידבר) | טאבים פנימיים תחת תצוגת לקוח יחיד, לא אגרגציה חוצה-לקוחות | כש-issue חדש ייפתח לצד-יועץ של הודעות (אין כיום — #10 הוא "צד צרכן" בלבד) — אותו מיקום בטאב הפנימי, לא טאב עליון נפרד |
 
