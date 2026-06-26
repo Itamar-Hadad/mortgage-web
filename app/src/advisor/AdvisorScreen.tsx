@@ -5,7 +5,8 @@ import { ClientList } from './ClientListPanel'
 import { ClientProfile } from './ClientProfile'
 import { DocumentsTab } from './DocumentsTab'
 import { TasksTab } from './TasksTab'
-import { MessagesPlaceholder } from './MessagesPlaceholder'
+import { MessagesTab, makeSeedMessages } from './MessagesTab'
+import type { ChatMessage } from './MessagesTab'
 import { CURRENT_ADVISOR_UID, seedRequests } from './seedRequests'
 import { PageShell } from '../shared/AppLayout'
 import type { AdvisorTask, MortgageRequest } from './types'
@@ -17,8 +18,14 @@ const CLIENT_TABS = ['profile', 'documents', 'messages'] as const
 
 export function AdvisorScreen() {
   const { t } = useTranslation()
-  const [requests, setRequests] = useState<MortgageRequest[]>(seedRequests)
+  const [requests, setRequests] = useState<MortgageRequest[]>(() => seedRequests())
   const [tasks, setTasks] = useState<AdvisorTask[]>([])
+  const [messagesByUid, setMessagesByUid] = useState<Record<string, ChatMessage[]>>(() => {
+    const first = seedRequests()[0]
+    if (!first) return {}
+    const name = first.personal[0] ? `${first.personal[0].first} ${first.personal[0].last}` : 'לקוח'
+    return { [first.uid]: makeSeedMessages(name) }
+  })
   const [selectedUid, setSelectedUid] = useState<string | null>(null)
   const [view, setView] = useState<View>('clients')
   const [clientTab, setClientTab] = useState<ClientTab>('profile')
@@ -122,7 +129,25 @@ export function AdvisorScreen() {
                   onUpdateClient={(patch) => selected && updateClient(selected.uid, patch)}
                 />
               )}
-              {clientTab === 'messages' && <MessagesPlaceholder />}
+              {clientTab === 'messages' && selected && (
+                <MessagesTab
+                  clientName={selected.personal[0] ? `${selected.personal[0].first} ${selected.personal[0].last}` : 'לקוח'}
+                  messages={messagesByUid[selected.uid] ?? []}
+                  onSend={(text) => {
+                    const msg: ChatMessage = {
+                      id: `msg-${Date.now()}`,
+                      senderRole: 'advisor',
+                      senderName: 'היועץ שלי',
+                      text,
+                      sentAt: new Date().toISOString(),
+                    }
+                    setMessagesByUid(prev => ({
+                      ...prev,
+                      [selected.uid]: [...(prev[selected.uid] ?? []), msg],
+                    }))
+                  }}
+                />
+              )}
             </div>
           </div>
         )}

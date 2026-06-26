@@ -47,3 +47,15 @@ _Avoid_: applicant, customer, co-borrower (כשמדובר ברשומה ולא ב
 **טיוטה** (Draft):
 תשובות שאלון "משכנתא חדשה" של משתמש סקרן, לפני הרשמה. קיימת רק בדפדפן (localStorage), לעולם לא ב-Firebase/Firestore. הופכת ל"בקשה" אמיתית (עם uid בעלים) רק ברגע ההרשמה — ראו [[0001-anonymous-progress-in-localstorage-only]]. משתמש סקרן שלא נרשם לעולם לא משאיר אצלנו שום רישום.
 _Avoid_: בקשה (לפני הרשמה), session, התקדמות אנונימית
+
+**דף הבית** (HomePage):
+נתיב `/` — נקודת הכניסה הראשונה לאתר לכל הקהלים (סקרן, רשום, צוות). מכיל: ניווט auth-aware, כרטיסי שלושת השירותים (משכנתא חדשה / מחזור / ביטוח), סקציות איך-זה-עובד, סטטיסטיקות, רשימת בנקים. השאלון עצמו נמצא בנתיב `/questionnaire`.
+_Avoid_: landing page (השתמש ב"דף הבית"), `/` (הכוונה לשאלון — לא נכון יותר)
+
+**כניסת צוות** (Staff Login):
+כניסה של מנהל או יועץ למערכת דרך `StaffSignInPage` — נתיב `/staff-sign-in`. המסך מציג בחירת תפקיד (מנהל / יועץ) כשלב ראשון, ואחריו טופס כניסה (Google או email+password). לאחר כניסה מוצלחת, המערכת בודקת Firebase custom claim (`role`) — אם קיים, גובר על הבחירה ב-UI — ומנתבת: admin → `/admin`, advisor → `/advisor`. הנתיבים `/admin` ו-`/advisor` מוגנים ב-`RequireRole` guard. הכפתור "כניסת צוות" בדף הבית מוביל ל-`/staff-sign-in`.
+_Avoid_: admin login, `/sign-in` לצוות (הנתיב `/sign-in` מיועד ללקוחות בלבד)
+
+**popup השלמה** (Completion Popup):
+דיאלוג המוצג למשתמש הרשום לאחר שמילא את **כל** סקציות האזור האישי (פרטים אישיים, נתוני משכנתא, כתבי הסמכה, מסמכים). כותב `status: 'pending_advisor'` ל-`requests/{uid}` ב-Firestore, ומפעיל בצד המנהל הצגת בקשה חדשה לשיוך ליועץ. לאחר סגירת ה-popup, המשתמש נשאר באזור האישי שלו.
+_Avoid_: confirmation dialog, success screen

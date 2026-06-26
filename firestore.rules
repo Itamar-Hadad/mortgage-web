@@ -6,8 +6,22 @@ service cloud.firestore {
       allow read, write: if request.auth != null
         && request.auth.token.role == 'admin';
 
-      // Consumer can read/write their own request aggregate (issues #5, #9)
-      allow read, write: if request.auth != null
+      // Newly-registered user creates their initial document during signup
+      // BEFORE claimConsumerRole sets the role claim (migrateDraftOnSignup runs
+      // first — see SignUpPage.tsx completeSignup). `create` only applies to
+      // brand-new documents so this cannot be abused to overwrite existing records.
+      allow create: if request.auth != null
+        && request.auth.uid == requestId;
+
+      // Consumer can read their own request even before the role claim is
+      // refreshed into the token (window between signup and first getIdToken).
+      // UID ownership is sufficient for reads — the document only exists for
+      // the user who created it.
+      allow read: if request.auth != null
+        && request.auth.uid == requestId;
+
+      // Updates require the consumer role to be confirmed in the token.
+      allow update: if request.auth != null
         && request.auth.uid == requestId
         && request.auth.token.role == 'consumer';
 
@@ -15,6 +29,18 @@ service cloud.firestore {
       allow read, write: if request.auth != null
         && request.auth.token.role == 'advisor'
         && resource.data.assignedAdvisorUid == request.auth.uid;
+    }
+
+    // requests/{uid}/events — signature event written by the consumer
+    // when they sign the disclosure form (usePersonalArea signCredentials).
+    match /requests/{requestId}/events/{eventId} {
+      allow create, read: if request.auth != null
+        && request.auth.uid == requestId
+        && request.auth.token.role == 'consumer';
+      allow read: if request.auth != null
+        && (request.auth.token.role == 'admin'
+            || (request.auth.token.role == 'advisor'
+                && get(/databases/$(database)/documents/requests/$(requestId)).data.assignedAdvisorUid == request.auth.uid));
     }
 
     // requests/{uid}/messages — consumer↔advisor thread (issue #10).

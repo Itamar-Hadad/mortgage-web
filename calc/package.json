@@ -1,0 +1,9 @@
+{
+  "name": "functions",
+  "description": "Cloud Functions wrapping the mortgage/mix calculation engine",
+  "main": "index.js",
+  "engines": { "node": "20" },
+  "dependencies": {
+    "firebase-functions": "^5.0.0"
+  }
+}

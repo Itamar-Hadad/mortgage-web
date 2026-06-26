@@ -83,7 +83,7 @@ function DashboardView({ requests }: { requests: MortgageRequest[] }) {
   return (
     <div className="space-y-8">
       {/* KPI strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
         <KpiCard label="סה״כ בקשות פתוחות" value={totalOpen} color="var(--color-primary)" />
         {Object.entries(byType).map(([type, count]) => (
           <KpiCard key={type} label={type} value={count} color="var(--color-secondary)" />
@@ -155,9 +155,9 @@ function DashboardView({ requests }: { requests: MortgageRequest[] }) {
 
 function KpiCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="glass-panel rounded-xl p-4 text-center" style={{ border: '1px solid rgba(188,201,204,0.3)' }}>
-      <p className="text-3xl font-bold" style={{ color }}>{value}</p>
-      <p className="text-xs mt-1" style={{ color: 'var(--color-on-surface-variant)' }}>{label}</p>
+    <div className="glass-panel rounded-2xl p-7 text-center" style={{ border: '1px solid rgba(188,201,204,0.3)' }}>
+      <p className="text-5xl font-bold mb-2" style={{ color, letterSpacing: '-0.02em' }}>{value}</p>
+      <p className="text-sm font-semibold" style={{ color: 'var(--color-on-surface-variant)' }}>{label}</p>
     </div>
   )
 }
@@ -190,7 +190,7 @@ function ClientsView({
   return (
     <div className="grid md:grid-cols-3 gap-6">
       {/* Left: list */}
-      <div className="md:col-span-1 space-y-3">
+      <div className="md:col-span-1 space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
           <select
             className="rounded-lg px-2 py-1 text-xs border flex-1"
@@ -212,20 +212,22 @@ function ClientsView({
               key={r.uid}
               type="button"
               onClick={() => setSelectedUid(r.uid)}
-              className="w-full text-right rounded-xl p-3 transition-all"
+              className="w-full text-right rounded-2xl transition-all"
               style={{
-                background: isSelected ? 'rgba(var(--color-primary-rgb, 7,90,94),0.08)' : 'rgba(255,255,255,0.6)',
-                border: `1px solid ${isSelected ? 'var(--color-primary)' : 'rgba(188,201,204,0.3)'}`,
+                padding: '1rem 1.25rem',
+                background: isSelected ? 'rgba(0,153,187,0.08)' : 'rgba(255,255,255,0.6)',
+                border: `2px solid ${isSelected ? 'var(--color-primary)' : 'rgba(188,201,204,0.3)'}`,
+                boxShadow: isSelected ? '0 0 0 3px rgba(0,153,187,0.12)' : 'none',
               }}
             >
-              <p className="font-semibold text-sm" style={{ color: 'var(--color-on-surface)' }}>{name}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--color-on-surface-variant)' }}>
+              <p className="font-bold text-base" style={{ color: 'var(--color-on-surface)' }}>{name}</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--color-on-surface-variant)' }}>
                 {r.loanPurpose || 'לא מצוין'} · {r.approvalStatus}
               </p>
               {/* assign dropdown inline */}
-              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+              <div className="mt-3" onClick={(e) => e.stopPropagation()}>
                 <select
-                  className="rounded px-2 py-0.5 text-xs border w-full"
+                  className="rounded-lg px-3 py-1.5 text-sm border w-full"
                   style={{ borderColor: 'rgba(188,201,204,0.4)', color: 'var(--color-on-surface-variant)', background: 'rgba(255,255,255,0.85)' }}
                   value={r.assignedAdvisorUid ?? ''}
                   onChange={(e) => onAssign(r.uid, e.target.value || null)}
@@ -784,16 +786,22 @@ export function AdminScreen() {
           {t('admin.title')}
         </h1>
 
-        <div className="flex gap-2 mb-6 border-b" style={{ borderColor: 'rgba(188,201,204,0.4)' }}>
+        <div className="flex gap-1 mb-8 border-b" style={{ borderColor: 'rgba(188,201,204,0.4)' }}>
           {VIEWS.map(({ key, label }) => (
             <button
               key={key}
               type="button"
               onClick={() => setView(key)}
-              className="font-bold px-4 py-2 -mb-px border-b-2"
+              className="-mb-px border-b-[3px] transition-colors"
               style={{
+                fontFamily: 'var(--font-headline)',
+                fontSize: '1.05rem',
+                fontWeight: 700,
+                padding: '0.85rem 1.75rem',
                 borderColor: view === key ? 'var(--color-primary)' : 'transparent',
                 color: view === key ? 'var(--color-primary)' : 'var(--color-on-surface-variant)',
+                background: view === key ? 'rgba(0,153,187,0.05)' : 'transparent',
+                borderRadius: '6px 6px 0 0',
               }}
             >
               {label}
