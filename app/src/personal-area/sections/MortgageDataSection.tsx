@@ -100,11 +100,6 @@ export function MortgageDataSection({ draft, onComplete }: Props) {
           אישור והמשך
           <Icon name="arrow_back" className="text-xl mr-2" />
         </button>
-        <button onClick={() => navigate('/')}
-          className="rounded-full font-bold py-3 px-6 border transition-colors"
-          style={{ borderColor: 'var(--color-outline-variant)', color: 'var(--color-on-surface-variant)' }}>
-          עדכון נתונים
-        </button>
       </div>
     </div>
   )
