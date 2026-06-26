@@ -33,7 +33,7 @@ export function useExplainerChat() {
       const res = await fetch(`${AGENT_URL}/runs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: `[uid:${uid}] ${text}` }),
+        body: JSON.stringify({ message: text, uid }),
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()

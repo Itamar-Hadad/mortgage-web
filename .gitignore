@@ -31,3 +31,7 @@ functions/src/calc-engine/
 
 # Playwright MCP verification artifacts
 .playwright-mcp/
+
+# Python agent — secrets
+agents/explainer/service-account.json
+agents/explainer/tmp/
