@@ -24,7 +24,7 @@ export function PersonalDetailsSection({ draft, onComplete }: Props) {
       last: b.last,
       birth: b.birth,
       income: String(b.income ?? ''),
-      marital: '',
+      marital: b.marital ?? '',
     }))
   )
   const [showError, setShowError] = useState(false)
