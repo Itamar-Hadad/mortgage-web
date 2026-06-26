@@ -1,0 +1,5 @@
+agno
+anthropic
+firebase-admin
+requests
+beautifulsoup4
