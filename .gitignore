@@ -40,3 +40,13 @@ functions/src/calc-engine/
 
 # Playwright MCP verification artifacts
 .playwright-mcp/
+
+# Python agents — local runtime files
+agents/explainer/service-account.json
+agents/explainer/tmp/
+agents/explainer/__pycache__/
+agents/rate-watcher/__pycache__/
+
+# Superpowers skill runtime
+.superpowers/
+docs/superpowers/

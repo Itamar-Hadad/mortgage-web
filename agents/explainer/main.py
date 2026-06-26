@@ -1,12 +1,19 @@
 import json
 import os
 import uvicorn
+from pathlib import Path
+
+# Load .env from app/ (works locally; in Cloud Run env vars come from the platform)
+_env_path = Path(__file__).parent.parent.parent / "app" / ".env"
+if _env_path.exists():
+    for _line in _env_path.read_text(encoding="utf-8").splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _, _v = _line.partition("=")
+            os.environ.setdefault(_k.strip(), _v.strip())
 
 from agno.agent import Agent
 from agno.models.anthropic import Claude
-from agno.knowledge import Knowledge
-from agno.vectordb.lancedb import LanceDb, SearchType
-from agno.knowledge.embedder.voyageai import VoyageAIEmbedder
 from agno.tools import tool
 from agno.run import RunContext
 from agno.os.app import AgentOS
@@ -20,6 +27,10 @@ _cred = credentials.Certificate(
 )
 firebase_admin.initialize_app(_cred)
 _db = firebase_firestore.client()
+
+# --- Load glossary into system prompt ---
+_glossary_path = Path(__file__).parent / "glossary.md"
+_glossary_text = _glossary_path.read_text(encoding="utf-8") if _glossary_path.exists() else ""
 
 
 # --- Tool ---
@@ -72,33 +83,18 @@ def get_user_mortgage_data(run_context: RunContext) -> str:
     return json.dumps(result, ensure_ascii=False)
 
 
-# --- Knowledge (RAG) ---
-knowledge = Knowledge(
-    vector_db=LanceDb(
-        uri="tmp/lancedb",
-        table_name="mortgage_glossary",
-        search_type=SearchType.hybrid,
-        embedder=VoyageAIEmbedder(id="voyage-3-lite"),
-    )
-)
-
-if not os.path.exists("tmp/lancedb/mortgage_glossary.lance"):
-    knowledge.insert(path="glossary.md")
-
-
 # --- Agent ---
 agent = Agent(
+    id="simplesave-explainer",
     model=Claude(id="claude-sonnet-4-6"),
     description="אתה עוזר שמסביר מונחי משכנתא בעברית פשוטה על בסיס מילון המושגים.",
     instructions=[
-        "ענה על בסיס הגלוסר שברשותך ועל בסיס נתוני המשכנתא של המשתמש.",
-        "אל תשתמש בידע כללי על משכנתאות שאינו מהגלוסר.",
+        f"להלן מילון המושגים המלא שברשותך — ענה אך ורק על בסיסו:\n\n{_glossary_text}",
         "כשהמשתמש שואל על הנתונים שלו (תשלום, יתרה, תמהיל, ריבית) — קרא ל-get_user_mortgage_data.",
         "אל תכלול שם, תעודת זהות, כתובת, טלפון או מייל בתשובות.",
         "ענה תמיד בעברית, בגובה העיניים, בלי ז'רגון מיותר.",
-        "אם אינך יודע או שהמידע אינו בגלוסר — אמור זאת בפירוש במקום לנחש.",
+        "אם המושג אינו במילון — אמור זאת בפירוש במקום לנחש.",
     ],
-    knowledge=knowledge,
     tools=[get_user_mortgage_data],
 )
 

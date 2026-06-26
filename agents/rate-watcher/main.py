@@ -12,7 +12,17 @@ Rate Watcher Agent — רץ כל 3 ימים, משווה ריבית פריים + 
 import json
 import os
 import sys
+from pathlib import Path
 import requests as http_requests
+
+# Load .env from app/ (works locally; in Cloud Run env vars come from the platform)
+_env_path = Path(__file__).parent.parent.parent / "app" / ".env"
+if _env_path.exists():
+    for _line in _env_path.read_text(encoding="utf-8").splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _, _v = _line.partition("=")
+            os.environ.setdefault(_k.strip(), _v.strip())
 
 import firebase_admin
 from firebase_admin import credentials, firestore as fb_firestore
@@ -38,98 +48,30 @@ CHANGE_THRESHOLD = 0.1  # אחוז — פער קטן יותר מזה לא נחש
 
 @tool()
 def fetch_market_rates() -> str:
-    """שלוף את ריבית הפריים העדכנית מבנק ישראל ואת מדד המחירים לצרכן מהלמ"ס.
+    """שלוף את ריבית הפריים העדכנית ואת מדד המחירים לצרכן השנתי.
     מחזיר JSON עם prime_rate ו-cpi_annual_pct. אם שליפה נכשלת — הערך יהיה null."""
-    from bs4 import BeautifulSoup
 
     result = {"prime_rate": None, "cpi_annual_pct": None, "source": {}}
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
-    # --- ריבית פריים מבנק ישראל (JSON API) ---
-    try:
-        # BOI Edge SDMX API — ריבית בנק ישראל (הפריים = ריבית בנ"י + 1.5%)
-        boi_url = (
-            "https://edge.boi.gov.il/FusionEdgeServer/sdmx/v2/data/dataflow/"
-            "BOI.STATISTICS/BOI.CBI/1.0/RH05_D"
-            "?startperiod=2025-01-01&format=jsondata"
-        )
-        resp = http_requests.get(boi_url, timeout=10, headers=headers)
-        if resp.status_code == 200:
-            data = resp.json()
-            series_map = (
-                data.get("data", {})
-                    .get("dataSets", [{}])[0]
-                    .get("series", {})
-            )
-            if series_map:
-                obs = list(series_map.values())[0].get("observations", {})
-                if obs:
-                    last_val = obs[max(obs, key=lambda k: int(k))][0]
-                    result["prime_rate"] = round(float(last_val) + 1.5, 4)
-                    result["source"]["prime"] = "BOI SDMX API"
-    except Exception as e:
-        print(f"[rate-watcher] BOI API failed: {e}", file=sys.stderr)
-
-    # fallback: scrape דף בנק ישראל
-    if result["prime_rate"] is None:
-        try:
-            page = http_requests.get(
-                "https://www.boi.org.il/he/monetarypolicy/interestrate/",
-                timeout=10, headers=headers,
-            )
-            soup = BeautifulSoup(page.content, "html.parser")
-            for tag in soup.find_all(["td", "span", "strong", "b"]):
-                text = tag.get_text(strip=True).replace(",", ".")
-                if "%" in text:
-                    try:
-                        val = float(text.replace("%", "").strip())
-                        if 0 < val < 20:
-                            # ריבית בנ"י — הפריים = +1.5%
-                            result["prime_rate"] = round(val + 1.5, 4)
-                            result["source"]["prime"] = "BOI scrape"
-                            break
-                    except ValueError:
-                        continue
-        except Exception as e:
-            print(f"[rate-watcher] BOI scrape failed: {e}", file=sys.stderr)
-
-    # --- מדד המחירים לצרכן מהלמ"ס (JSON API) ---
+    # --- CPI מ-CBS API (עובד בוודאות) ---
+    # השדה percentYear = שינוי שנתי באחוזים של המדד הכללי (id=120010)
     try:
         cbs_url = "https://api.cbs.gov.il/index/data/price?id=120010&format=json&lang=he"
-        resp = http_requests.get(cbs_url, timeout=10, headers=headers)
+        resp = http_requests.get(cbs_url, timeout=10)
         if resp.status_code == 200:
-            data = resp.json()
-            for entry in reversed(data.get("data", [])):
-                annual = entry.get("annual_change")
+            series = (resp.json().get("month", []) or [])
+            # מבנה: month[0].date[0] = הרשומה העדכנית ביותר
+            dates = series[0].get("date", []) if series else []
+            if dates:
+                annual = dates[0].get("percentYear")
                 if annual is not None:
                     result["cpi_annual_pct"] = round(float(annual), 4)
-                    result["source"]["cpi"] = "CBS API"
-                    break
+                    result["source"]["cpi"] = f"CBS API ({dates[0].get('month')}/{dates[0].get('year')})"
     except Exception as e:
-        print(f"[rate-watcher] CBS API failed: {e}", file=sys.stderr)
+        print(f"[rate-watcher] CBS CPI failed: {e}", file=sys.stderr)
 
-    # fallback: scrape דף הלמ"ס
-    if result["cpi_annual_pct"] is None:
-        try:
-            page = http_requests.get(
-                "https://www.cbs.gov.il/he/pages/default.aspx",
-                timeout=10, headers=headers,
-            )
-            soup = BeautifulSoup(page.content, "html.parser")
-            for tag in soup.find_all(["span", "td", "div", "p"]):
-                text = tag.get_text(strip=True)
-                if "%" in text and any(w in text for w in ["מדד", "אינפלציה", "שינוי"]):
-                    try:
-                        num = text.split("%")[0].strip().split()[-1].replace(",", ".")
-                        val = float(num)
-                        if -5 < val < 30:
-                            result["cpi_annual_pct"] = round(val, 4)
-                            result["source"]["cpi"] = "CBS scrape"
-                            break
-                    except ValueError:
-                        continue
-        except Exception as e:
-            print(f"[rate-watcher] CBS scrape failed: {e}", file=sys.stderr)
+    # --- ריבית פריים: BOI חסום — הסוכן עצמו ידווח לפי ידע עדכני ---
+    # prime_rate נשאר None; הסוכן יטפל בזה בהוראות
 
     return json.dumps(result, ensure_ascii=False)
 
@@ -197,13 +139,13 @@ agent = Agent(
     model=Claude(id="claude-sonnet-4-6"),
     description="אתה סוכן מעקב ריביות של מערכת SimpleSave. תפקידך לבדוק האם ריבית הפריים ומדד המחירים לצרכן בשוק השתנו לעומת מה שמוגדר במערכת.",
     instructions=[
-        "1. קרא ל-fetch_market_rates() כדי לקבל את הנתונים העדכניים מהשוק.",
-        "2. קרא ל-get_config_rates() כדי לראות מה מוגדר כרגע במערכת.",
-        f"3. חשב את הפער לכל מדד. פער של {CHANGE_THRESHOLD}% ומעלה נחשב משמעותי.",
-        "4. אם יש פער משמעותי באחד המדדים או יותר — קרא ל-notify_admin() עם הודעה ברורה בעברית.",
-        "   ההודעה תכלול: הערך בשוק, הערך המוגדר, ההמלצה לעדכן בפאנל הניהול.",
-        "5. אם אין פער משמעותי — אל תשלח הודעה, רק דווח שהכל תקין.",
-        "אם שליפת נתוני השוק נכשלה (null) — ציין זאת בפירוש ואל תשלח התראת שווא.",
+        "1. קרא ל-fetch_market_rates() — מחזיר CPI מ-CBS API. ריבית הפריים תמיד null (מקור חסום).",
+        "2. לגבי ריבית הפריים: השתמש בידע שלך על ריבית בנק ישראל הנוכחית (פריים = ריבית בנ\"י + 1.5%)."
+        "   ציין בבירור שזה אומדן מידע אימון, לא שליפה בזמן אמת.",
+        "3. קרא ל-get_config_rates() כדי לראות מה מוגדר כרגע במערכת.",
+        f"4. חשב פער לכל מדד. פער של {CHANGE_THRESHOLD}% ומעלה נחשב משמעותי.",
+        "5. אם יש פער משמעותי — קרא ל-notify_admin() עם הודעה הכוללת: ערך בשוק, ערך במערכת, המלצה לעדכן.",
+        "6. אם אין פער משמעותי — אל תשלח הודעה, רק דווח שהכל תקין.",
     ],
     tools=[fetch_market_rates, get_config_rates, notify_admin],
 )
