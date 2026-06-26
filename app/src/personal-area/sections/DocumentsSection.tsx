@@ -199,6 +199,7 @@ function DocCard({ type, doc, isUploading, error, onUpload, t }: DocCardProps) {
             }}
           />
           <button
+            type="button"
             onClick={() => fileRef.current?.click()}
             className="rounded-full font-bold py-2 px-6 text-sm transition-all hover:brightness-110 active:scale-95"
             style={{ background: doc?.status === 'נדחה' ? 'var(--color-error-container)' : 'var(--color-primary-container)', color: doc?.status === 'נדחה' ? 'var(--color-on-error-container)' : 'var(--color-on-primary-container)' }}>
