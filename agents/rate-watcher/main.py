@@ -175,21 +175,18 @@ def get_config_rates() -> str:
 
 @tool()
 def notify_admin(message: str) -> str:
-    """שלח הודעת התראה למנהל המערכת דרך תיבת ההודעות.
-    ההודעה תופיע בממשק הניהול תחת לשונית ההודעות של אותו משתמש.
+    """שלח התראה למנהל המערכת — תופיע כ-alert banner בממשק הניהול.
     השתמש בפונקציה זו רק כשיש פער משמעותי שדורש פעולה מצד המנהל."""
-    if not ADMIN_UID:
-        return "שגיאה: ADMIN_UID לא מוגדר — לא ניתן לשלוח הודעה."
-
     try:
-        _db.collection("requests").document(ADMIN_UID).collection("messages").add({
-            "sender": "rate-watcher-agent",
-            "text": message,
+        _db.collection("admin-alerts").add({
+            "message": message,
+            "source": "rate-watcher-agent",
+            "read": False,
             "timestamp": SERVER_TIMESTAMP,
         })
-        return "הודעה נשלחה בהצלחה למנהל."
+        return "התראה נשלחה בהצלחה."
     except Exception as e:
-        return f"שגיאה בשליחת ההודעה: {e}"
+        return f"שגיאה בשליחת ההתראה: {e}"
 
 
 # ---------------------------------------------------------------------------
