@@ -33,8 +33,9 @@ export function AdvisorsView({ advisors }: Props) {
       await createAdvisor({ firstName, lastName, email, password })
       resetForm()
       setShowForm(false)
-    } catch {
-      setError(t('admin.advisors.error'))
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setError(msg || t('admin.advisors.error'))
     } finally {
       setSubmitting(false)
     }
