@@ -40,6 +40,7 @@ _db = fb_firestore.client()
 
 ADMIN_UID = os.environ.get("ADMIN_UID", "")
 CHANGE_THRESHOLD = 0.1  # אחוז — פער קטן יותר מזה לא נחשב שינוי משמעותי
+ALERT_SOURCE = "סוכן עוקב מדד"
 
 
 # ---------------------------------------------------------------------------
@@ -118,11 +119,17 @@ def get_config_rates() -> str:
 @tool()
 def notify_admin(message: str) -> str:
     """שלח התראה למנהל המערכת — תופיע כ-alert banner בממשק הניהול.
-    השתמש בפונקציה זו רק כשיש פער משמעותי שדורש פעולה מצד המנהל."""
+    השתמש בפונקציה זו רק כשיש פער משמעותי שדורש פעולה מצד המנהל.
+    התראות קודמות של סוכן זה נמחקות לפני שליחת ההתראה החדשה, כדי שלא
+    יצטברו כמה גרסאות של אותה התראה בממשק הניהול."""
     try:
+        previous = _db.collection("admin-alerts").where("source", "==", ALERT_SOURCE).get()
+        for doc in previous:
+            doc.reference.delete()
+
         _db.collection("admin-alerts").add({
             "message": message,
-            "source": "rate-watcher-agent",
+            "source": ALERT_SOURCE,
             "read": False,
             "timestamp": SERVER_TIMESTAMP,
         })

@@ -54,6 +54,17 @@ async function run() {
   const othersTasksQuery = query(collection(advisor2.firestore(), 'tasks'), where('advisorUid', '==', 'advisor1'))
   await assertFails(getDocs(othersTasksQuery))
 
+  // Admin creates the two standard tasks when assigning an advisor to a client
+  // (adminFirestore.ts assignAdvisorInFirestore) — not the advisor's own uid.
+  const adminForTasks = testEnv.authenticatedContext('admin1', { role: 'admin' })
+  await assertSucceeds(
+    addDoc(collection(adminForTasks.firestore(), 'tasks'), {
+      advisorUid: 'advisor1', requestUid: 'client1', text: 'לעבור על פרטי הלקוח ולאשר את המסמכים', done: false,
+    }),
+  )
+  const adminTasksQuery = query(collection(adminForTasks.firestore(), 'tasks'), where('advisorUid', '==', 'advisor1'))
+  await assertSucceeds(getDocs(adminTasksQuery))
+
   // requests/{uid}/messages — consumer↔advisor thread (issue #10)
   await seedRequest('client2', { assignedAdvisorUid: 'advisor1' })
   const ownerClient2 = testEnv.authenticatedContext('client2', { role: 'consumer' })

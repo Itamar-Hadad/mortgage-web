@@ -16,22 +16,35 @@ function renderAt(path: string) {
   )
 }
 
-test('home route shows the questionnaire title', () => {
+test('home route shows the landing page (ADR-0007), not the questionnaire', () => {
   renderAt('/')
+  // HomePage hero + staff-login affordance, brand visible
+  expect(screen.getAllByAltText('SimpleSave').length).toBeGreaterThan(0)
+  expect(screen.getByText('כניסת צוות')).toBeInTheDocument()
+  // the questionnaire lives at /questionnaire now, not at /
+  expect(
+    screen.queryByRole('heading', { name: he.q.title }),
+  ).not.toBeInTheDocument()
+})
+
+test('questionnaire route shows the questionnaire title', () => {
+  renderAt('/questionnaire')
   expect(screen.getByRole('heading', { name: he.q.title })).toBeInTheDocument()
 })
 
-test('personal-area route shows its translated placeholder text', () => {
-  renderAt('/personal-area')
-  expect(screen.getByText(he.placeholder.personal_area)).toBeInTheDocument()
-})
-
-test('admin route shows the admin screen', () => {
+test('admin route redirects to staff sign-in when unauthenticated (RequireRole)', () => {
   renderAt('/admin')
-  expect(screen.getByRole('heading', { name: he.admin.title })).toBeInTheDocument()
+  // guard denies (no auth.currentUser in tests) → Navigate to /staff-sign-in
+  expect(screen.getByText('כניסת צוות')).toBeInTheDocument()
+  expect(
+    screen.queryByRole('heading', { name: he.admin.title }),
+  ).not.toBeInTheDocument()
 })
 
-test('advisor route shows the advisor screen', () => {
+test('advisor route redirects to staff sign-in when unauthenticated (RequireRole)', () => {
   renderAt('/advisor')
-  expect(screen.getByRole('heading', { name: he.advisor.title })).toBeInTheDocument()
+  expect(screen.getByText('כניסת צוות')).toBeInTheDocument()
+  expect(
+    screen.queryByRole('heading', { name: he.advisor.title }),
+  ).not.toBeInTheDocument()
 })

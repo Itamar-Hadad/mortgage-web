@@ -1,15 +1,43 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { I18nextProvider } from 'react-i18next'
 import i18n from '../shared/i18n'
 import he from '../locales/he.json'
-import { AdvisorScreen } from './AdvisorScreen'
+import { seedRequests, CURRENT_ADVISOR_UID } from './seedRequests'
+
+// AdvisorScreen reads the signed-in advisor's uid from `auth.currentUser` and
+// subscribes to `requests` via Firestore's onSnapshot — neither exists in
+// jsdom, so both are mocked here. onSnapshot fires the seed data synchronously
+// so the tests below don't need to await a real async round-trip.
+vi.mock('../shared/firebase', () => ({
+  auth: { currentUser: { uid: CURRENT_ADVISOR_UID } },
+  db: {},
+}))
+
+vi.mock('firebase/firestore', () => ({
+  collection: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  onSnapshot: (_query: unknown, onNext: (snap: { docs: { id: string; data: () => unknown }[] }) => void) => {
+    onNext({
+      docs: seedRequests().map((request) => ({ id: request.uid, data: () => request })),
+    })
+    return () => {}
+  },
+}))
+
+const { AdvisorScreen } = await import('./AdvisorScreen')
 
 function renderScreen() {
+  // AdvisorScreen renders PageShell → AppHeader, which calls useNavigate(),
+  // so it must be rendered inside a Router.
   return render(
     <I18nextProvider i18n={i18n}>
-      <AdvisorScreen />
+      <MemoryRouter>
+        <AdvisorScreen />
+      </MemoryRouter>
     </I18nextProvider>,
   )
 }
@@ -132,12 +160,14 @@ describe('AdvisorScreen', () => {
     expect(within(generalGroup).getByDisplayValue('דיברתי עם הלקוח')).toBeInTheDocument()
   })
 
-  it('shows a placeholder for the הודעות tab', async () => {
+  it('shows the message thread for the selected client on the הודעות tab', async () => {
     const user = userEvent.setup()
     renderScreen()
 
     await click(user, he.advisor.tabs.messages)
-    expect(screen.getByText(he.advisor.messages_placeholder)).toBeInTheDocument()
+    // MessagesTab (issue #10, advisor side) starts with no messages for a
+    // client until the advisor sends one — no separate "not built yet" state.
+    expect(screen.getByText('עדיין אין הודעות — שלחו הודעה ראשונה ללקוח')).toBeInTheDocument()
   })
 
   it('searches the client list by name or ID number', async () => {
